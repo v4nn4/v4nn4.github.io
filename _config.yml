@@ -1,0 +1,23 @@
+# Setup
+title:               vanna's blog
+tagline:             ''
+description:         ''
+url:                 https://github.com/v4nn4
+baseurl:             ''
+paginate:            5
+permalink:           pretty
+
+# About/contact
+author:
+  name:              Romain Florentz
+  url:               https://github.com/v4nn4
+  email:             romflorentz@gmail.com
+
+# Gems
+plugins:
+  - jekyll-paginate
+
+# Custom vars
+version:             1.0.0
+google_analytics_id: #UA-XXXX-Y
+markdown: kramdown
