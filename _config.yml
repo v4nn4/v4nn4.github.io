@@ -12,10 +12,13 @@ author:
 
 # Build settings
 markdown: kramdown
-permalink: pretty
+paginate: 5
+paginate_path: "/page:num/"
+inter_post_navigation: true
 
-highlighter: rouge
-kramdown:
-  input: GFM
-  auto_ids: true
-  syntax_highlighter: rouge
+# External gems
+gems:
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jemoji
+  - jekyll-seo-tag
