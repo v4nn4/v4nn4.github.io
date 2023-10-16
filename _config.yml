@@ -1,25 +1,21 @@
 # Setup
-title:               vanna's blog
-tagline:             ''
-description:         ''
-url:                 https://github.com/v4nn4
-baseurl:             ''
-paginate:            5
-permalink:           pretty
+title: vanna's blog
+description: ""
+url: "http://v4nn4.github.io"
+baseurl: ""
 
 # About/contact
 author:
-  name:              Romain Florentz
-  url:               https://github.com/v4nn4
-  email:             romflorentz@gmail.com
+  name: ""
+  url: "https://github.com/v4nn4"
+  email: ""
 
-# Gems
-plugins:
-- jekyll-paginate
-- jekyll-remote-theme # add this line to the plugins list if you already have one
-
-# Custom vars
-version:             1.0.0
-google_analytics_id: #UA-XXXX-Y
+# Build settings
 markdown: kramdown
-remote_theme: pages-themes/minimal@v0.2.0
+permalink: pretty
+
+highlighter: rouge
+kramdown:
+  input: GFM
+  auto_ids: true
+  syntax_highlighter: rouge
