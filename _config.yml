@@ -13,12 +13,16 @@ author:
 # Build settings
 markdown: kramdown
 paginate: 5
-paginate_path: "/page:num/"
+paginate_path: "/blog/page:num/"
 inter_post_navigation: true
 
 # External gems
+plugins: [jekyll-paginate]
 gems:
   - jekyll-sitemap
   - jekyll-paginate
   - jemoji
-  - jekyll-seo-tag
+
+# Github
+github:
+  repo: "https://github.com/v4nn4"
