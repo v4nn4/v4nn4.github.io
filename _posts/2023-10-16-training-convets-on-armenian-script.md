@@ -145,7 +145,7 @@ When using the regular font Mk_Parz_U, the accuracy drops to 59.2%. In the train
 
 And with a sans-serif font like Arial, the accuracy drops to 10.5%... Quite bad. Still better than randomly guessing = 1/76 = 1.3% to be fair.
 
-![Evaluation on Arial](/assets/images/evaluation_Arial.png){: .center}
+![Evaluation on Arial](/assets/images/evaluation_arial.png){: .center}
 
 We see that our model fails to generalize well to other fonts. It is not entirely surprising as the network learns the strokes of a single font. So going from one font to another might be challenging without prior knowledge of those stylistic variations. We find however some generalization when learning on an italic and testing on its regular version. This makes some sense as a differentiable operations (skewing, obliquing) transforms one into the other. That operation is not exactly a rotation, which could explain the drop in accuracy even though some rotations were used to augment the training set.
 
