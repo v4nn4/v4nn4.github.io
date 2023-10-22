@@ -3,24 +3,23 @@ layout: post
 title: Tinkering with Tesseract
 ---
 
-I have recently been experimenting with [Tesseract](https://github.com/tesseract-ocr/tesseract), an Optical Character Recognition (OCR) engine made by Google.
+I have recently been experimenting with [Tesseract](https://github.com/tesseract-ocr/tesseract), an Optical Character Recognition (OCR) engine developed by Google.
 
-My main goal was to extract text from scans of a 1920s Armenian newspaper and run search queries on it. Terms like *պատերազմ* (war) or *Ֆրանսիա* (France) for instance are likely to be found within the document.
+My primary objective was to extract text from scans of a 1920s Armenian newspaper and execute search queries on it. Terms like *պատերազմ* (war) or *Ֆրանսիա* (France) for instance are likely to be discovered within the document.
 
 ![Armenian newspaper scan (1925)](/assets/images/haratch_1925_08.png){: .center}
 
 Some initial observations on the document :
 
-- **Image segmentation** : there are a lot of different text blocks in the raw document, and it might be challenging to tell them apart. We will focus on a isolated portion of the text to start
-- **Pre-processing** : we will have to convert the image to black and white, increase contrast and use denoising to get rid of the verso background noise
+- **Image segmentation** : there are a lot of different text blocks in the raw document, and distinguishing between them might be challenging. We will begin by concentrating on an isolated section of the text.
+- **Pre-processing** : we will need to convert the image to black and white, enhance contrast, and employ denoising techniques to eliminate the verso background noise
 - **Font** : the font used in this 1925 newspaper is likely unknown to Tesseract. However, according to [tesseract-ocr/langdata/issues/67](https://github.com/tesseract-ocr/langdata/issues/67), the training data used a dozen fonts with italic and bold variations, so it should not be an issue
 
 ## Using Tesseract
 
-In this section, we investigate the Tesseract performance on our sample. We are using Tesseract 5.3.3 version on Windows ([download page](https://github.com/UB-Mannheim/tesseract/wiki)). The [pytesseract](https://github.com/madmaze/pytesseract) module provides a python layer to call the Tesseract executables.
+In this section, we examine the performance of Tesseract on our sample. We are using Tesseract 5.3.3 version on Windows ([download page](https://github.com/UB-Mannheim/tesseract/wiki)). The [pytesseract](https://github.com/madmaze/pytesseract) module provides a python layer to call the Tesseract executables.
 
-
-We will use the following sample from the first page of the newspaper as a benchmark :
+s a benchmark, we will use the following sample from the first page of the newspaper :
 
 ![Sample](/assets/images/sample.jpg)
 
@@ -59,11 +58,11 @@ ground_truth = " ".join(open("sample.gt.txt", "r").read().splitlines())
 cer = CharErrorRate()(predictions, ground_truth).item()
 ```
 
-We see that contrast and brightness brings CER down to around 10-15%. The variance observed in the CER might just be due to the small size of the dataset.
+We observe that adjustments in contrast and brightness reduce the Character Error Rate (CER) to approximately 10-15%. The variance noticed in the CER could be attributed to the limited dataset size.
 
 ![Character Error Rate](/assets/images/cer.svg){: .center }
 
-Increased brightness helps getting rid of the verso background noise. However if pushed too high, some shapes start disappearing, and Tesseract might confuse characters. This is especially true as some characters only differ by a single stroke.  For now we will settle on brightness 2.5 and contrast 2.5, but we keep in mind that this might be an overfit.
+Augmenting the brightness aids in reducing the verso background noise. However, if it is increased excessively, certain shapes may begin to disappear, potentially leading to character confusion by Tesseract. This is particularly true for characters that only differ by a single stroke. At the moment, we will opt for a brightness setting of 2.5 and a contrast setting of 2.5. However, we remain aware that this could result in overfitting.
 
 Sample image with contrast 2.5 and brightness 1.0, 2.5 and 3.0 :
 
@@ -96,8 +95,8 @@ The CER is 13%, which is an character-level accuracy of 87%. Diffing the two tex
 ?    ^ ^    +
 ```
 
-We can see that some errors are made when characters differ only by a single stroke, like with ե and է or with ր and ը. The translation is obviously very far from the translated ground truth.
+We can observe that errors occur when characters differ by just a single stroke, such as with ե and է or with ր and ը. The translation is notably far from the translated ground truth.
 
-One thing I realized also is that serifs on է and ր can vary depending on the font. Courier New (serif) has no lower stroke on է, but has lower strokes on ր. The newspaper font has strong lower strokes on ր, such that ր and ը are hard to tell apart. The fonts used to train Tesseract seem to be equally weighted between serif and sans serif fonts. Training on a single font matching closely the one from the newspaper could yield better result.
+One realization that I had is that the serifs on է and ր can vary depending on the font. For instance, Courier New (a serif font) lacks a lower stroke on է but features lower strokes on ր. In contrast, a newspaper font possesses prominent lower strokes on ր, making it challenging to distinguish between ր and ը. The fonts used to train Tesseract appear to have a balanced representation of serif and sans-serif fonts. Training on a single font closely matching that of the newspaper could potentially yield better results.
 
-I tried to train Tesseract on the font [Mk_Parz_U-Italic](https://fonter.am/en/fonts/mk-parz-unicode), which resembles the one from the newspaper. I used `text2image` to generate training examples (images and ground truth) from a Wikipedia article written in Armenian, but eventually ran into trouble with `tesstrain`. Might train again in the future.
+I made an attempt to train Tesseract on the font [Mk_Parz_U-Italic](https://fonter.am/en/fonts/mk-parz-unicode), which resembles the one used in newspapers. I used `text2image` to generate training examples (images and ground truth) from a Wikipedia article written in Armenian. However, I eventually encountered issues with `tesstrain`. I might consider retraining in the future.
