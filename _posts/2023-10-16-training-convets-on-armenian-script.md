@@ -33,9 +33,9 @@ plt.tight_layout()
 plt.gcf().set_size_inches(10, 3)
 ```
 
-![Mk_Park_U](/assets/images/alphabet.png){: .center}
+![Mk_Park_U](/assets/images/hynet/alphabet.png){: .center}
 
-Since the font has serifs, the difference between capital and small letters is not obvious. Maybe `Օ` and `օ` could be merged into a single character, but I preferred keeping all characters.
+Since the font has serifs, the difference between capital and small letters is not obvious. Maybe `Օ` and `օ` could be merged into a single character, but I preferred keeping all characters for simplicity.
 
 For each set of 76 characters, we generate an image consisting of 56x56 pixels and apply 20 rotations, 20 blurs, and 3 mode filters. We generated a total of 91,200 examples, shuffled the dataset, and used an 80% training/test split to avoid overfitting.
 
@@ -64,11 +64,11 @@ T = T.view((1, N, N))  # network input
 ```
 
 Here is an example with the letter `խ` as a 56x56 pixels image :
-![Network input](/assets/images/network_input.svg){: .center}
+![Network input](/assets/images/hynet/network_input.svg){: .center}
 
 Here are 4 batches of the training set :
 
-![Training dataset](/assets/images/training_set.png){: .center}
+![Training dataset](/assets/images/hynet/training_set.png){: .center}
 
 ## Modeling
 
@@ -78,7 +78,7 @@ We will use the the LeNet-5 model, a Convolutional Neural Network (CNN) introduc
 
 Below is a visualization of the LeNet-5 architecture, transforming a 32x32 image into a 10 rows vector.
 
-![LeNet-5 architecture](/assets/images/lenet-5.png){: .center}
+![LeNet-5 architecture](/assets/images/hynet/lenet-5.png){: .center}
 
 Our optimization problem reads
 
@@ -169,7 +169,7 @@ for epoch in epochs:
 
 We trained our model for 10 epochs and stopped at epoch 5. We achieved an almost perfect fit, with 99.5% accuracy. The initialization seems to do the trick as we start very high on the first epoch. Here is the training report :
 
-![Training report](/assets/images/report.svg){: .center}
+![Training report](/assets/images/hynet/report.svg){: .center}
 
 It is interesting to note that we only misclassify a single character in our training set :
 
@@ -181,15 +181,15 @@ This was a character that we identified as a potential trouble maker in [Tinkeri
 
 The graphs below show, for each image representing each character (no rotation, no blur) the probability output by the network for each predicted character. The one with the highest probability has the largest size. A straight line indicates that the model achieves perfect accuracy.
 
-![Evaluation on Mk_Parz_U-Iatlic](/assets/images/evaluation_Mk_Parz_U-Italic.png){: .center}
+![Evaluation on Mk_Parz_U-Iatlic](/assets/images/hynet/evaluation_Mk_Parz_U-Italic.png){: .center}
 
 When using the regular font Mk_Parz_U, the accuracy drops to 59.2%. In the training set, we used negative rotations that resemble the non-italic font. However, those samples account for a only fraction of the total set, around a minority as we use a set of angles ranging from -40° to 0.
 
-![Evaluation on Mk_Parz_U](/assets/images/evaluation_Mk_Parz_U.png){: .center}
+![Evaluation on Mk_Parz_U](/assets/images/hynet/evaluation_Mk_Parz_U.png){: .center}
 
 With a sans-serif font like Arial, the accuracy drops to 10.5%... Quite bad. Still better than randomly guessing, which is 1/76, or 1.3%, to be fair.
 
-![Evaluation on Arial](/assets/images/evaluation_arial.png){: .center}
+![Evaluation on Arial](/assets/images/hynet/evaluation_arial.png){: .center}
 
 We observe that our model fails to generalize effectively to other fonts. This is not entirely surprising, as the network learns the strokes of a single font. Transitioning from one font to another can be challenging without prior knowledge of the stylistic variations. However, we do notice some degree of generalization when training on an italic font and testing on its regular version. The transformation from regular to italic primarily involves rotating the non-horizontal strokes. Our data augmentation using rotations might have helped, but was not sufficient to reach a good accuracy.
 
