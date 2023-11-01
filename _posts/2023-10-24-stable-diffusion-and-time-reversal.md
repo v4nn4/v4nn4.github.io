@@ -3,19 +3,21 @@ layout: post
 title: Stable Diffusion and time reversal
 ---
 
-I recently spent some time reading about the algorithms behind [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release). They heavily rely on a 40 years old result[^1] on diffusion processes. In essence, this result states that there exist an explicit path from an initial probability distribution $$p$$ to a random noise (a normal distribution), and that this path can be reversed.
+I recently spent some time reading about the algorithm behind [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release). It heavily relies on a 40-years-old result on diffusion processes[^1]. In essence, this result states that there exists an explicit path from an initial probability distribution $$p$$ to a random noise (a normal distribution), and that this path can be reversed.
 
-One application is sampling : we can draw from a sample from a random noise and use the reverse diffusion to get a sample from $$p$$. In the case of images, $$p$$ is the distribution of pixels colors in a $$N \times N$$ image. The dimension of this problem is $$3N^2$$ since images have 3 color channels (red, green and blue). It seems that $$N=512$$ is common, so we are talking about a dimension close to 1 million.
+One application of this concept is in sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $$p$$. In practice, $$p$$ is the distribution of pixels colors in a $$N \times N$$ image. The dimension of this problem is $$3N^2$$ since images have 3 color channels (red, green and blue). The initial release of Stable Diffusion was using $$N=512$$.
 
-In this note I will focus on the maths behind reverse time diffusions and see how they work in low dimension.
+In this document, I'll delve into the mechanics of reverse-time diffusions in lower dimensions and derive equations to build a better understanding and intuition.
 
 ## Forward diffusion
 
-The Ornstein-Uhlenbeck stochastic process is defined by the following stochastic differential equation (SDE) : 
+The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This is achieved mathematically using an Ornstein-Uhlenbeck process. The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
 
 $$ dX_t = - \theta (X_t - \mu) dt + \sigma dW_t $$
 
-where $$W$$ is a Brownian motion defined on a probability space $$(\Omega, \mathcal{F}, P)$$. We can show using [Itô's formula](https://en.wikipedia.org/wiki/It%C3%B4%27s_lemma) with $$f(t, x) = x e^{\theta t}$$ that 
+where $$W$$ is a Brownian motion defined on a probability space $$(\Omega, \mathcal{F}, P)$$. The first term is forcing the mean to converge to $$\mu$$, while the second term is adding noise.
+
+We can show using [Itô's formula](https://en.wikipedia.org/wiki/It%C3%B4%27s_lemma) with $$f(t, x) = x e^{\theta t}$$ that 
 
 $$ X_t = \mu + (X_0 - \mu) e^{-\theta t} + \sigma \int_0^t e^{-\theta (t - s)} dW_s $$
 
@@ -36,9 +38,9 @@ At this point we can notice a few things :
 - **Impact of the noise level $$\sigma$$** : the noise (or volatility) parameter $$\sigma$$ has a similar impact on the diffusion as the time $$t$$. Increasing $$\sigma$$ will lead to noise being added faster
 - **Distribution of $$X$$** : the distribution of $$X$$ given $$X_0$$ is normal, but the unconditional distribution is not in general. In the case where $$X_0$$ is itself normal, each step of the diffusion will generate a new normal distribution as we sum independant Gaussian variables together
 
-## Reverse diffusion
+## Backward diffusion
 
-We follow the notations of Haussmann and Pardoux[^7] and define $$\bar{X}_t = X_{1-t}$$ for $$0 \leq t \leq 1$$. It can be shown that the reverse process $$\bar{X}$$ follows the SDE
+We follow the notations of Haussmann and Pardoux[^7] and define $$\bar{X}_t = X_{1-t}$$ for $$0 \leq t \leq 1$$. It can be shown[^1][^7] that the reverse process $$\bar{X}$$ follows the SDE
 
 $$ d\bar{X}_t = \left[ \frac{\sigma^2}{2} \bar{X}_t + \sigma^2 s_{1-t}(\bar{X}_t) \right] dt +  \sigma d\bar{W}_t $$
 
@@ -50,7 +52,7 @@ is the score function associated with distribution $$p_{t}$$ and $$\bar{W}$$ a B
 
 One method is score matching[^2][^3]. The score function $$s_t$$ is approximated using parametrical models and a clever integration by part trick[^4]. This method is well suited for high dimensional problem as the scoring function can be learned ahead of time using neural networks. The U-Net[^5] architecture seems to be used extensively for this purpose in computer vision[^6].
 
-A naive way would be for instance to express the distribution $$p_t$$ as a function of the initial distribution $$p_0$$ and use a Monte-Carlo method. First we write :
+A naive way would have been for instance to express the distribution $$p_t$$ as a function of the initial distribution $$p_0$$ and use a Monte-Carlo method. First we write :
 
 $$ p_t(x) = \int p_{y\sqrt{\alpha_t}, 1-\alpha_t}(x) p_0(y) dy $$
 
@@ -66,7 +68,7 @@ This method can be very heavy as it needs to operate on the entire dataset at ea
 
 ## Centered Gaussian case
 
-When the initial distribution is Gaussian, the process $$X$$ stays Gaussian, and we get a closed form for the distribution $$p$$. We can then derive the exact mean and variance of the reverse diffusion.
+When the initial distribution is Gaussian, the process $$X$$ stays Gaussian, and we get a closed form for the distribution $$p$$. We can then derive the exact mean and variance of the reverse process.
 
 **Note** : going from a normal distribution to a standard normal distribution can be done in one step : $$X_1 = (X_0 - \mu) / \sigma$$. The following derivation is for learning purpose only!
 
@@ -91,7 +93,7 @@ Some interesting cases :
 - $$\sigma_0^2 < 2$$ means the mean reversion speed is always positive, while when $$\sigma_0^2 \geq 2$$, it can change sign during diffusion
 - $$\sigma_0 = 0$$ leads to a SDE that starts as the forward SDE and tends to a singularity as $$\alpha_{1-t}$$ approaches 1. Indeed, the SDE cannot converge to a constant, as an independent noise is added at each step
 
-The reverse diffusion is an Ornstein-Uhlenbeck process with time dependent parameters. Using Itô's formula again with $$f(t, x) = x e^{\frac{\sigma_0^2}{2}\int_0^t \beta_s ds}$$, we get :
+The backward diffusion is an Ornstein-Uhlenbeck process with time dependent parameters. Using Itô's formula again with $$f(t, x) = x e^{\frac{\sigma_0^2}{2}\int_0^t \beta_s ds}$$, we get :
 
 $$ \bar{X}_t = \bar{X}_0 e^{-\frac{\sigma^2}{2} \int_0^t \beta_s ds} + \sigma \int_0^t e^{-\frac{\sigma^2}{2}\int_s^t \beta_u du} d\bar{W}_s $$
 
@@ -103,7 +105,7 @@ one can recognize the derivative of a logarithm and find that
 
 $$ e^{-\frac{\sigma^2}{2}\int_0^t \beta_s ds } = e^{-\frac{\sigma^2}{2}t} \frac{1- (1-\sigma_0^2)\alpha_{1-t}}{1-(1-\sigma_0^2)\alpha_1} $$
 
-which tends to $$0$$ as $$t \rightarrow 1$$. This means that the variance contribution of the firm term is null. The variance of the second term is more involved but leads to :
+which tends to $$0$$ as $$t \rightarrow 1$$. This means that the variance contribution of the firm term is zero. The variance of the second term is more involved but leads to :
 
 $$ \frac{(1-\gamma \alpha_{1-t})^2}{\gamma \alpha_{a-t}} \left[ \frac{1}{1 -\gamma \alpha_{1-t}} - \frac{1}{1-\gamma\alpha_1} \right] $$
 
@@ -141,7 +143,7 @@ def forward_diffusion_step(
 
 
 dt = T / NB_TIMESTEPS
-sigma = math.sqrt(-math.log(EPS) / T)  # alpha_t = eps
+sigma = math.sqrt(-math.log(EPS) / T)  # alpha_T = eps
 X0 = torch.normal(0, 1, size=(NB_PATHS,))
 X = torch.zeros((NB_TIMESTEPS, NB_PATHS))
 Z = torch.normal(0, 1, size=(NB_TIMESTEPS - 1, NB_PATHS))
