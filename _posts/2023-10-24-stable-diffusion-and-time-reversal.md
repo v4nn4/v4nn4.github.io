@@ -11,7 +11,7 @@ In this document, I'll delve into the mechanics of reverse-time diffusions in lo
 
 ## Forward diffusion
 
-The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This is achieved mathematically using an Ornstein-Uhlenbeck process. The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
+The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This is achieved mathematically using an [Ornstein-Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process). The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
 
 $$ dX_t = - \theta (X_t - \mu) dt + \sigma dW_t $$
 
@@ -66,7 +66,7 @@ $$ s_t(x) = \frac{\sum_{i=1}^N  - \frac{x - X_0^i \sqrt{\alpha_{t}}}{1-\alpha_{t
 
 This method can be very heavy as it needs to operate on the entire dataset at each step. Note that the resulting distribution is a Gaussian mixture with equally weighted normal variables centered on each particle $$X_0^i$$.
 
-Another method would be to actually approximate the distribution $$p_t$$ with a lower dimension Gaussian mixture. The score has a closed form and can then be easily calculated.
+Another method would be to actually approximate the distribution $$p_t$$ with a Gaussian mixture. The score has a closed form and can then be easily calculated.
 
 ## Centered Gaussian case
 
@@ -121,7 +121,7 @@ Something interesting to note is that for a given level of convergence of the va
 
 ## PyTorch implementation
 
-We consider a 1-dimensional distribution $$p$$, and use the previous diffusion to generate a random noise. In order to target an end variance of $$1 - \varepsilon$$, we let $$T = 1$$ and $$\sigma$$ such that $$\alpha_T = \varepsilon$$.
+We consider a 1-dimensional distribution $$p$$, and use the previous diffusion to generate a random noise. In order to target an end variance of $$1 - \varepsilon$$, we let $$T = 1$$ and $$\sigma$$ such that $$\alpha_T = \varepsilon$$. We use the [Euler scheme](https://en.wikipedia.org/wiki/Euler%E2%80%93Maruyama_method) to discretize the diffusion.
 
 ```python
 import math
@@ -215,6 +215,10 @@ def backward_diffusion_step(
 ```
 
 ![Diffusion from N(0, 1) to a Gaussian mixture](/assets/images/diffusion/gmm.png){: .center}
+
+That's all for today!
+
+---
 
 [^1]: ANDERSON, Brian DO. Reverse-time diffusion equation models. Stochastic Processes and their Applications, 1982, vol. 12, no 3, p. 313-326.
 
