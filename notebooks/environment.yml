@@ -1,0 +1,17 @@
+name: blogenv
+dependencies:
+  - python=3.11
+  - pip
+  - ipykernel
+  - matplotlib
+  - seaborn
+  - numpy
+  - pandas
+  - pytorch
+  - torchvision
+  - pillow
+  - torchmetrics
+  - pip:
+    - black
+    - isort
+    - nbqa

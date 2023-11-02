@@ -64,7 +64,9 @@ The score function then reads
 
 $$ s_t(x) = \frac{\sum_{i=1}^N  - \frac{x - X_0^i \sqrt{\alpha_{t}}}{1-\alpha_{t}} p_{X_0^i\sqrt{\alpha_{t}}, 1-\alpha_{t}}(x)}{\sum_{i=1}^N p_{X_0^i\sqrt{\alpha_{t}}, 1-\alpha_{t}}(x)}  $$
 
-This method can be very heavy as it needs to operate on the entire dataset at each step.
+This method can be very heavy as it needs to operate on the entire dataset at each step. Note that the resulting distribution is a Gaussian mixture with equally weighted normal variables centered on each particle $$X_0^i$$.
+
+Another method would be to actually approximate the distribution $$p_t$$ with a lower dimension Gaussian mixture. The score has a closed form and can then be easily calculated.
 
 ## Centered Gaussian case
 
@@ -170,7 +172,7 @@ def backward_diffusion_step(
 ) -> torch.Tensor:
     sigma2 = sigma * sigma
     alpha = math.exp(-sigma2 * (1 - t))
-    score = -(X - mu0 * math.sqrt(alpha)) / (sigma0 * alpha + 1 - alpha)
+    score = -(X - mu0 * math.sqrt(alpha)) / (sigma0 * sigma0 * alpha + 1 - alpha)
     return (
         X
         + 0.5 * sigma2 * X * dt
@@ -180,6 +182,39 @@ def backward_diffusion_step(
 ```
 
 ![Diffusion from N(0, 1) to N(10, 0.1)](/assets/images/diffusion/backward_diffusion.png){: .center}
+
+Finally, we can re-write the score used in the backward SDE when the initial distribution is a Gaussian mixture. Indeed, Gaussian mixtures are stable by addition with a normal variable, and we can proceed similarly to the previous case.
+
+```python
+def backward_diffusion_step(
+    X: torch.Tensor,
+    Z: torch.Tensor,
+    sigma: float,
+    params0: List[Tuple[float, float]],
+    t: float,
+    dt: float,
+) -> torch.Tensor:
+    sigma2 = sigma * sigma
+    alpha = math.exp(-sigma2 * (1 - t))
+    n = len(params0)
+    score, divisor = 0, 0
+    for (mu0, sigma0) in params0:
+        mut = mu0 * math.sqrt(alpha)
+        sigmat2 = sigma0 * sigma0 * alpha + 1 - alpha
+        denominator = math.sqrt(2 * math.pi * sigmat2)
+        pit = np.exp(-(X - mut) * (X - mut) / (2 * sigmat2)) / denominator
+        divisor += 1 / n * pit
+        score -= 1 / n * pit * (X - mut) / sigmat2
+    score /= divisor
+    return (
+        X
+        + 0.5 * sigma2 * X * dt
+        + score * sigma2 * dt
+        + sigma * Z * math.sqrt(dt)
+    )
+```
+
+![Diffusion from N(0, 1) to a Gaussian mixture](/assets/images/diffusion/gmm.png){: .center}
 
 [^1]: ANDERSON, Brian DO. Reverse-time diffusion equation models. Stochastic Processes and their Applications, 1982, vol. 12, no 3, p. 313-326.
 
