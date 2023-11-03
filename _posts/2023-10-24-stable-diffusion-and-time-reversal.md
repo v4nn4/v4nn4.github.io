@@ -3,19 +3,19 @@ layout: post
 title: Stable Diffusion and time reversal
 ---
 
-I recently spent some time reading about the algorithm behind [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release). It heavily relies on a 40-years-old result on diffusion processes[^1]. In essence, this result states that there exists an explicit path from an initial probability distribution $$p$$ to a random noise (a normal distribution), and that this path can be reversed.
+I recently spent some time reading about the algorithm behind [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release) and other similar models. It relies essentially on a 40-years-old result on diffusion processes[^1]. In short, this result states that there exists an explicit path from an initial probability distribution $$p$$ to a random noise (a normal distribution), and that this path can be reversed.
 
-One application of this concept is in sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $$p$$. In practice, $$p$$ is the distribution of pixels colors in a $$N \times N$$ image. The dimension of this problem is $$3N^2$$ since images have 3 color channels (red, green and blue). The initial release of Stable Diffusion was using $$N=512$$.
+One application of this concept is in sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $$p$$. In computer vision, $$p$$ is the distribution of pixels colors in a $$N \times N$$ image. The dimension of this problem is $$3N^2$$ since images have 3 color channels (red, green and blue). The initial release of Stable Diffusion was using $$N=512$$.
 
-In this document, I'll delve into the mechanics of reverse-time diffusions in lower dimensions and derive equations to build a better understanding and intuition.
+In this document, I'll delve into the mechanics of reverse-time diffusions in dimension 1 (one pixel, one color channel) and derive equations to build a better understanding and intuition.
 
 ## Forward diffusion
 
-The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This is achieved mathematically using an [Ornstein-Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process). The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
+The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This can be achieved mathematically using an [Ornstein-Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process). The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
 
 $$ dX_t = - \theta (X_t - \mu) dt + \sigma dW_t $$
 
-where $$W$$ is a Brownian motion defined on a probability space $$(\Omega, \mathcal{F}, P)$$. The first term is forcing the mean to converge to $$\mu$$, while the second term is adding noise.
+where $$W$$ is a Brownian motion defined on some probability space $$(\Omega, \mathcal{F}, P)$$. The first term is forcing the mean to converge to $$\mu$$, while the second term is adding noise.
 
 We can show using [Itô's formula](https://en.wikipedia.org/wiki/It%C3%B4%27s_lemma) with $$f(t, x) = x e^{\theta t}$$ that 
 
@@ -46,31 +46,35 @@ $$ d\bar{X}_t = \left[ \frac{\sigma^2}{2} \bar{X}_t + \sigma^2 s_{1-t}(\bar{X}_t
 
 where 
 
-$$ s_t(x) = \frac{d\log p_{t}(x)}{dx}$$
+$$ s_t(x) = (\log p_{t})'(x)$$
 
-is the score function associated with distribution $$p_{t}$$ and $$\bar{W}$$ a Brownian motion. In practice, the score is intractable and needs to be approximated.
+is the score function associated with distribution $$p_{t}$$ (derivative of its logarithm) and $$\bar{W}$$ another Brownian motion. In practice, the score is intractable and needs to be approximated.
 
-One method is score matching[^2][^3]. The score function $$s_t$$ is approximated using parametrical models and a clever integration by part trick[^4]. This method is well suited for high dimensional problem as the scoring function can be learned ahead of time using neural networks. The U-Net[^5] architecture seems to be used extensively for this purpose in computer vision[^6].
+### Score matching
 
-A naive way would have been for instance to express the distribution $$p_t$$ as a function of the initial distribution $$p_0$$ and use a Monte-Carlo method. First we write :
+One method is score matching[^2][^3]. The score function $$s_t$$ is approximated using a parametrical model $$s_\theta$$ :
 
-$$ p_t(x) = \int p_{y\sqrt{\alpha_t}, 1-\alpha_t}(x) p_0(y) dy $$
+$$ \min_\theta J(\theta) = \min_\theta \mathbb{E}\left[\left(s_\theta(X_t) - s_t(X_t)\right)^2  \right] $$
 
-where $$ p_{\mu, \sigma} \sim \mathcal{N}(\mu, \sigma)$$. Then we can approximate $$p_t$$ using estimator $$\widetilde{p}_t$$:
+We can simplify this expression by using an integration by part trick[^4]. First we develop $$J$$ :
 
-$$ \widetilde{p}_t(x) = \frac{1}{N} \sum_{i=1}^N  p_{X_0^i\sqrt{\alpha_t}, 1-\alpha_t}(x) $$
+$$ \int_D (s_\theta(x)^2 - 2 s_\theta(x) s_t(x))p_t(x)dx + \mathbb{E}\left[ s_t(X_t)^2 \right] $$
 
-The score function then reads
+Since the last term does not depend on $$\theta$$, minimizing the rest will suffice. Thus our new cost function $$\tilde{J}$$ reads, after integration by part :
 
-$$ s_t(x) = \frac{\sum_{i=1}^N  - \frac{x - X_0^i \sqrt{\alpha_{t}}}{1-\alpha_{t}} p_{X_0^i\sqrt{\alpha_{t}}, 1-\alpha_{t}}(x)}{\sum_{i=1}^N p_{X_0^i\sqrt{\alpha_{t}}, 1-\alpha_{t}}(x)}  $$
+$$ \tilde{J}(\theta) = \mathbb{E}\left[ s_\theta(X_t)^2 + 2  s_\theta'(X_t) \right] $$
 
-This method can be very heavy as it needs to operate on the entire dataset at each step. Note that the resulting distribution is a Gaussian mixture with equally weighted normal variables centered on each particle $$X_0^i$$.
+This removes the dependency to an explicit formulation of the distribution $$p_t$$. Instead we can rely on Monte-Carlo estimation for instance to compute the cost function.
 
-Another method would be to actually approximate the distribution $$p_t$$ with a Gaussian mixture. The score has a closed form and can then be easily calculated.
+**Note** : $$s_\theta = 0$$ is the best constant model, but is beaten by linear models with negative slope. Indeed, the second term pushes the derivative of the score to be negative. This is consistent with the Gaussian case.
+
+### Gaussian mixtures
+
+Another method would be to actually approximate the distribution $$p_t$$ with a [Gaussian mixture](https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model). In this case, the score is explicit, which is a nice property.  The drawback of this method is probably that the space of Gaussian mixtures is restrictive in some sense. Score matching seem to be done with neural networks, which we know are universal approximators. The U-Net[^5] architecture seems to be favored in computer vision applications[^6].
 
 ## Centered Gaussian case
 
-When the initial distribution is Gaussian, the process $$X$$ stays Gaussian, and we get a closed form for the distribution $$p$$. We can then derive the exact mean and variance of the reverse process.
+When the initial distribution is Gaussian, the process $$X$$ stays Gaussian, and we get a closed form for the distribution $$p$$. We can then derive explicitely the reverse process.
 
 **Note** : going from a normal distribution to a standard normal distribution can be done in one step : $$X_1 = (X_0 - \mu) / \sigma$$. The following derivation is for learning purpose only!
 
