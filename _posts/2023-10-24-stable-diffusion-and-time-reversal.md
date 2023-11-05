@@ -155,7 +155,7 @@ X = torch.zeros((NB_TIMESTEPS, NB_PATHS))
 Z = torch.normal(0, 1, size=(NB_TIMESTEPS - 1, NB_PATHS))
 X[0] = X0
 for i in range(NB_TIMESTEPS - 1):
-  X[i+1] = diffusion_step(X[i], dt, sigma, Z[i])
+  X[i+1] = forward_diffusion_step(X[i], Z[i], sigma, dt)
 ```
 
 Here is a forward diffusion from $$\mathcal{N}(10, 0.1)$$ to $$\mathcal{N}(0, 1)$$ :
