@@ -1,17 +1,17 @@
 ---
 layout: post
-title: Stable Diffusion and time reversal
+title: Diffusion models and time reversal
 ---
 
-I recently spent some time reading about the algorithm behind [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release) and other similar models. It relies essentially on a 40-years-old result on diffusion processes[^1]. In short, this result states that there exists an explicit path from an initial probability distribution $$p$$ to a random noise (a normal distribution), and that this path can be reversed.
+I recently spent some time reading about the algorithms that power [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release) and similar image generation models. They essentially rely on a 40-years-old result on diffusion processes[^1]. In short, this result states that there exists an explicit path from an initial probability distribution $$p$$ to a random noise (a normal distribution), and that this path can be reversed.
 
-One application of this concept is in sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $$p$$. In computer vision, $$p$$ is the distribution of pixels colors in a $$N \times N$$ image. The dimension of this problem is $$3N^2$$ since images have 3 color channels (red, green and blue). The initial release of Stable Diffusion was using $$N=512$$.
+One application of this concept is in sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $$p$$. In computer vision, $$p$$ is the distribution of pixels colors in a $$N \times N$$ image. The dimension of this problem is $$3N^2$$ since images have 3 color channels. The initial release of Stable Diffusion was using $$N=512$$.
 
 In this document, I'll delve into the mechanics of reverse-time diffusions in dimension 1 (one pixel, one color channel) and derive equations to build a better understanding and intuition.
 
 ## Forward diffusion
 
-The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This can be achieved mathematically using an [Ornstein-Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process). The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
+The transition from an image to noise is accomplished by repetitively introducing random perturbations to our initial distribution. This can be done in a continuous time setting using an [Ornstein-Uhlenbeck stochastic process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process). The Ornstein-Uhlenbeck process is defined by the following stochastic differential equation (SDE) :
 
 $$ dX_t = - \theta (X_t - \mu) dt + \sigma dW_t $$
 
@@ -54,23 +54,31 @@ is the score function associated with distribution $$p_{t}$$ (derivative of its 
 
 One method is score matching[^2][^3]. The score function $$s_t$$ is approximated using a parametrical model $$s_\theta$$ :
 
-$$ \min_\theta J(\theta) = \min_\theta \mathbb{E}\left[\left(s_\theta(X_t) - s_t(X_t)\right)^2  \right] $$
+$$ \min_\theta J(\theta) = \min_\theta \mathbb{E}\left[ \frac{1}{2} \left(s_\theta(X_t) - s_t(X_t)\right)^2  \right] $$
 
-We can simplify this expression by using an integration by part trick[^4]. First we develop $$J$$ :
+The $$1/2$$ constant is only a convention. We can simplify this expression by using an integration by part trick[^4]. First we develop $$J$$ :
 
-$$ \int_D (s_\theta(x)^2 - 2 s_\theta(x) s_t(x))p_t(x)dx + \mathbb{E}\left[ s_t(X_t)^2 \right] $$
+$$ \int_D \frac{1}{2}(s_\theta(x)^2 - 2 s_\theta(x) s_t(x))p_t(x)dx + \frac{1}{2}\mathbb{E}\left[ s_t(X_t)^2 \right] $$
 
 Since the last term does not depend on $$\theta$$, minimizing the rest will suffice. Thus our new cost function $$\tilde{J}$$ reads, after integration by part :
 
-$$ \tilde{J}(\theta) = \mathbb{E}\left[ s_\theta(X_t)^2 + 2  s_\theta'(X_t) \right] $$
+$$ \tilde{J}(\theta) = \mathbb{E}\left[ \frac{1}{2} s_\theta(X_t)^2 +  s_\theta'(X_t) \right] $$
 
 This removes the dependency to an explicit formulation of the distribution $$p_t$$. Instead we can rely on Monte-Carlo estimation for instance to compute the cost function.
 
-**Note** : $$s_\theta = 0$$ is the best constant model, but is beaten by linear models with negative slope. Indeed, the second term pushes the derivative of the score to be negative. This is consistent with the Gaussian case.
+**Note 1** : $$s_\theta = 0$$ is the best constant model, but is beaten by linear models with negative slope. Indeed, the second term pushes the derivative of the score to be negative. This is consistent with the Gaussian case.
+
+**Note 2** : In dimension $$N > 1$$, the formulation becomes[^4] :
+
+$$ s_t(\textbf{x}) = \nabla \log p_t (\textbf{x}) $$
+
+$$ \tilde{J}(\theta) = \mathbb{E}\left[ \frac{1}{2} \lVert s_\theta(X_t) \rVert_2^2 + \textrm{tr}(\nabla s_\theta(X_t)) \right] $$
+
+ Neural networks are used in practice, where $$\theta$$ represents the weights of the network. The U-Net[^5] architecture for instance is used to estimate the score function in computer vision[^6].
 
 ### Gaussian mixtures
 
-Another method would be to actually approximate the distribution $$p_t$$ with a [Gaussian mixture](https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model). In this case, the score is explicit, which is a nice property.  The drawback of this method is probably that the space of Gaussian mixtures is restrictive in some sense. Score matching seem to be done with neural networks, which we know are universal approximators. The U-Net[^5] architecture seems to be favored in computer vision applications[^6].
+Another method would be to actually approximate the distribution $$p_t$$ with a [Gaussian mixture](https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model). In this case, the score is explicit, which is a nice property.  The drawback of this method is probably that the space of Gaussian mixtures is restrictive in some sense.
 
 ## Centered Gaussian case
 
@@ -220,7 +228,7 @@ def backward_diffusion_step(
 
 ![Diffusion from N(0, 1) to a Gaussian mixture](/assets/images/diffusion/gmm.png){: .center}
 
-That's all for today!
+That's all for today! ✨
 
 ---
 
