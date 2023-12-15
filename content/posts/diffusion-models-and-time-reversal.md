@@ -8,9 +8,9 @@ ShowBreadCrumbs: false
 math: katex
 ---
 
-I recently spent some time reading about the algorithms that power [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release) and similar image generation models. They essentially rely on a 40-years-old result on diffusion processes[^1]. In short, this result states that there exists an explicit path from an initial probability distribution $p$ to a random noise (a normal distribution), and that this path can be reversed.
+I recently spent some time reading about the algorithms behind [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release) and similar image generation models. They have been linked with an interesting 40-years-old result on diffusion processes[^1]. In short, this result states that there exists an explicit path from an initial probability distribution $p_0$ to a random noise (a normal distribution), and that this path can be reversed.
 
-One application of this concept is in sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $p$. In computer vision, $p$ is the distribution of pixels colors in a $N \times N$ image. The dimension of this problem is $3N^2$ since images have 3 color channels. The initial release of Stable Diffusion was using $N=512$.
+One application of this concept is sampling : we can draw a sample from a random noise and use the backward diffusion to obtain a sample from $p_0$. In the context of computer vision, this distribution would be multivariate with dimension $3 \times W \times H$, where $W$ and $H$ are respectively the width and height of a RGB image in pixels. The initial release of Stable Diffusion was using $H=W=512$.
 
 In this document, I'll delve into the mechanics of reverse-time diffusions in dimension 1 (one pixel, one color channel) and derive equations to build a better understanding and intuition.
 
