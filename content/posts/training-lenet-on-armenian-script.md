@@ -1,9 +1,14 @@
 ---
-layout: post
-title: Training LeNet-5 on Armenian script
+author: "v4nn4"
+title: "Training LeNet-5 on Armenian script"
+date: "2023-10-16"
+tags: ["cnn", "lenet", "armenian"]
+ShowToc: false
+ShowBreadCrumbs: false
+math: mathjax
 ---
 
-Following [Tinkering with Tesseract]({% post_url 2023-10-13-tinkering-with-tesseract %}), I wanted to gain a better understanding of how OCR systems work. So, I decided to start with building my own character recognition engine using [PyTorch](https://github.com/pytorch/pytorch). The code is available at [v4nn4/hynet](https://github.com/v4nn4/hynet).
+Following [Tinkering with Tesseract]({{< ref "posts/tinkering-with-tesseract.md" >}} "Tinkering with Tesseract"), I wanted to gain a better understanding of how OCR systems work. So, I decided to start with building my own character recognition engine using [PyTorch](https://github.com/pytorch/pytorch). The code is available at [v4nn4/hynet](https://github.com/v4nn4/hynet).
 
 ## Generating a dataset
 
@@ -33,7 +38,7 @@ plt.tight_layout()
 plt.gcf().set_size_inches(10, 3)
 ```
 
-![Mk_Park_U](/assets/images/hynet/alphabet.png){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/alphabet.png" >}}
 
 Since the font has serifs, the difference between capital and small letters is not obvious. Maybe `Օ` and `օ` could be merged into a single character, but I preferred keeping all characters for simplicity.
 
@@ -64,27 +69,27 @@ T = T.view((1, N, N))  # network input
 ```
 
 Here is an example with the letter `խ` as a 56x56 pixels image :
-![Network input](/assets/images/hynet/network_input.svg){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/network_input.svg" >}}
 
 Here are 4 batches of the training set :
 
-![Training dataset](/assets/images/hynet/training_set.png){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/training_set.png" >}}
 
 ## Modeling
 
-Each image has $$N^2 = 56^2 = 3136$$ values in range $$[0, 255]$$, or rather $$[0, 1]$$ after normalization. We denote by $$\textbf{x}_i \in \mathbb{R}^{N^2}$$ the pixel intensities of the i-th image. Our goal is to find a mapping between those pixel intensities, and our target labels. This mapping should be represented by a function  $$f : \mathbb{R}^{N^2} \rightarrow \mathbb{R}^{C}$$ where $$C = 76$$ is the number of classes of our classification problem. For each image $$\textbf{x}$$, $$\textbf{y}=f(\textbf{x})$$ will represent the probability of each class.
+Each image has $N^2 = 56^2 = 3136$ values in range $[0, 255]$, or rather $[0, 1]$ after normalization. We denote by $\textbf{x}_i \in \mathbb{R}^{N^2}$ the pixel intensities of the i-th image. Our goal is to find a mapping between those pixel intensities, and our target labels. This mapping should be represented by a function  $f : \mathbb{R}^{N^2} \rightarrow \mathbb{R}^{C}$ where $C = 76$ is the number of classes of our classification problem. For each image $\textbf{x}$, $f(\textbf{x})=\textbf{y}$ will represent the probability of each class.
 
 We will use the the LeNet-5 model, a Convolutional Neural Network (CNN) introduced by Yann LeCun in 1998[^1]. This model has been successfully applied on handwritten digits recognition, where the number of classes is 10 (see MNIST[^2] dataset). Our understanding is that the model captures the geometry of character strokes thanks to its convolution kernels. Our dataset have more classes, higher resolution, as well as characters with more complicated shapes, like `թ` or `ֆ`. But essentially, the problem is similar, and we believe convolutional kernels should adapt to our dataset without too much trouble.
 
 Below is a visualization of the LeNet-5 architecture, transforming a 32x32 image into a 10 rows vector.
 
-![LeNet-5 architecture](/assets/images/hynet/lenet-5.png){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/lenet-5.png" >}}
 
 Our optimization problem reads
 
 $$ \min_\theta \sum_i L(f_{\theta}(\textbf{x}_i), \textbf{y}_i) $$
 
-where $$\theta$$ represents LeNet-5 parameters (weights and biases) and $$L$$ is the cross-entropy loss function. The vector $$\textbf{y}_i$$ will be the one-hot encoded label associated with the i-th image. For instance if the i-th image represents a `խ`, $$\textbf{y}_i$$ will be $$0$$ on each coordinate, except on the 12th, where it will be $$1$$. This is because `խ` is the 13th character of our list.
+where $\theta$ represents LeNet-5 parameters (weights and biases) and $L$ is the cross-entropy loss function. The vector $\textbf{y}_i$ will be the one-hot encoded label associated with the i-th image. For instance if the i-th image represents a `խ`, $\textbf{y}_i$ will be $0$ on each coordinate, except on the 12th, where it will be $1$. This is because `խ` is the 13th character of our list.
 
 We implement the model using PyTorch. Here is the model definition :
 
@@ -169,7 +174,7 @@ for epoch in epochs:
 
 We trained our model for 10 epochs and stopped at epoch 5. We achieved an almost perfect fit, with 99.5% accuracy. The initialization seems to do the trick as we start very high on the first epoch. Here is the training report :
 
-![Training report](/assets/images/hynet/report.svg){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/report.svg" >}}
 
 It is interesting to note that we only misclassify a single character in our training set :
 
@@ -181,15 +186,15 @@ This was a character that we identified as a potential trouble maker in [Tinkeri
 
 The graphs below show, for each image representing each character (no rotation, no blur) the probability output by the network for each predicted character. The one with the highest probability has the largest size. A straight line indicates that the model achieves perfect accuracy.
 
-![Evaluation on Mk_Parz_U-Iatlic](/assets/images/hynet/evaluation_Mk_Parz_U-Italic.png){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/evaluation_Mk_Parz_U-Italic.png" >}}
 
 When using the regular font Mk_Parz_U, the accuracy drops to 59.2%. In the training set, we used negative rotations that resemble the non-italic font. However, those samples account for a only fraction of the total set, around a minority as we use a set of angles ranging from -40° to 0.
 
-![Evaluation on Mk_Parz_U](/assets/images/hynet/evaluation_Mk_Parz_U.png){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/evaluation_Mk_Parz_U.png" >}}
 
 With a sans-serif font like Arial, the accuracy drops to 10.5%... Quite bad. Still better than randomly guessing, which is 1/76, or 1.3%, to be fair.
 
-![Evaluation on Arial](/assets/images/hynet/evaluation_arial.png){: .center}
+{{< figure align=center src="/posts/training-lenet-on-armenian-script/evaluation_arial.png" >}}
 
 We observe that our model fails to generalize effectively to other fonts. This is not entirely surprising, as the network learns the strokes of a single font. Transitioning from one font to another can be challenging without prior knowledge of the stylistic variations. However, we do notice some degree of generalization when training on an italic font and testing on its regular version. The transformation from regular to italic primarily involves rotating the non-horizontal strokes. Our data augmentation using rotations might have helped, but was not sufficient to reach a good accuracy.
 

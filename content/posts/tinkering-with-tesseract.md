@@ -1,13 +1,17 @@
 ---
-layout: post
-title: Tinkering with Tesseract
+author: "v4nn4"
+title: "Tinkering with Tesseract"
+date: "2023-10-13"
+tags: ["tesseract", "ocr"]
+ShowToc: false
+ShowBreadCrumbs: false
 ---
 
 I have recently been experimenting with [Tesseract](https://github.com/tesseract-ocr/tesseract), an Optical Character Recognition (OCR) engine developed by Google.
 
 My primary objective was to extract text from scans of a 1920s Armenian newspaper and execute search queries on it. Terms like *պատերազմ* (war) or *Ֆրանսիա* (France) for instance are likely to be discovered within the document.
 
-![Armenian newspaper scan (1925)](/assets/images/hynet/haratch_1925_08.png){: .center}
+{{< figure align=center src="/posts/tinkering-with-tesseract/haratch_1925_08.png" >}}
 
 Some initial observations on the document :
 
@@ -21,7 +25,7 @@ In this section, we examine the performance of Tesseract on our sample. We are u
 
 s a benchmark, we will use the following sample from the first page of the newspaper :
 
-![Sample](/assets/images/hynet/sample.jpg)
+![Sample](/posts/tinkering-with-tesseract/sample.jpg)
 
 I wrote down the *ground truth* by hand :
 
@@ -60,15 +64,15 @@ cer = CharErrorRate()(predictions, ground_truth).item()
 
 We observe that adjustments in contrast and brightness reduce the Character Error Rate (CER) to approximately 10-15%. The variance noticed in the CER could be attributed to the limited dataset size.
 
-![Character Error Rate](/assets/images/hynet/cer.svg){: .center }
+{{< figure align=center src="/posts/tinkering-with-tesseract/cer.svg" >}}
 
 Augmenting the brightness aids in reducing the verso background noise. However, if it is increased excessively, certain shapes may begin to disappear, potentially leading to character confusion by Tesseract. This is particularly true for characters that only differ by a single stroke. At the moment, we will opt for a brightness setting of 2.5 and a contrast setting of 2.5. However, we remain aware that this could result in overfitting.
 
 Sample image with contrast 2.5 and brightness 1.0, 2.5 and 3.0 :
 
-![Sample image contrast 2.5 brightness 1.0](/assets/images/hynet/sample_enhanced_b1.0_c2.5.png)
-![Sample image contrast 2.5 brightness 2.5](/assets/images/hynet/sample_enhanced_b2.5_c2.5.png)
-![Sample image contrast 2.5 brightness 3.0](/assets/images/hynet/sample_enhanced_b3.0_c2.5.png)
+![Sample image contrast 2.5 brightness 1.0](/posts/tinkering-with-tesseract/sample_enhanced_b1.0_c2.5.png)
+![Sample image contrast 2.5 brightness 2.5](/posts/tinkering-with-tesseract/sample_enhanced_b2.5_c2.5.png)
+![Sample image contrast 2.5 brightness 3.0](/posts/tinkering-with-tesseract/sample_enhanced_b3.0_c2.5.png)
 
 ### Results
 
