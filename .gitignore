@@ -44,3 +44,5 @@ bower_components
 
 # Hugo
 .hugo_build.lock
+
+public

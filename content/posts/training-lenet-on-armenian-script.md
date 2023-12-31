@@ -192,6 +192,8 @@ When using the regular font Mk_Parz_U, the accuracy drops to 59.2%. In the train
 
 {{< figure align=center src="/posts/training-lenet-on-armenian-script/evaluation_Mk_Parz_U.png" >}}
 
+> **EDIT (December 2023)** : the test below is incorrect. The Arial TTF file in use lacked Armenian support, resulting in images populated with the placeholder 'unknown character' symbol □. Additionally, due to an overlooked issue with the random seed, the graph appears erratic when, in fact, it should display as a straight line. See [Some thoughts on training LeNet]({{< ref "posts/some-thoughts-on-training-lenet.md" >}} "Some thoughts on training LeNet") for more information.
+
 With a sans-serif font like Arial, the accuracy drops to 10.5%... Quite bad. Still better than randomly guessing, which is 1/76, or 1.3%, to be fair.
 
 {{< figure align=center src="/posts/training-lenet-on-armenian-script/evaluation_arial.png" >}}
