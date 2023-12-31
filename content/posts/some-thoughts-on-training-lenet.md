@@ -12,11 +12,19 @@ Since my last blog post [Training LeNet on Armenian script]({{< ref "posts/train
 
 ## Model simplification
 
-To reduce the number of hyperparameters, I hardcoded the mean and standard deviation used for normalizing pixel intensities. For this, I arbitrarily decided that a square occupying one-third of the total pixel space would represent an average character.
+The model takes as input a mean and standard deviation for normalizing pixel intensities. These values are calibrated on the training set before initiating the gradient descent loop for adjusting the weights and biases.
 
-The mean and standard deviation of the pixel intensities are respectively $1/3$ (a third is black) and $\sqrt{2}/3$. Those values are close to those observed on the training set.
+To make things simpler, I hardcoded those parameters. This way the dependency between model and training set only happens in the gradient descent loop. Importing the model, for instance from a Gradio app, becomes:
 
-I also chose to focus only on the lower case letters for this project to reduce the number of classes to 38.
+```python
+N, num_classes, mean, std = 56, 38, 2 / 3, np.sqrt(2) / 3
+model = LeNet(N, num_classes, mean, std)
+model.load_state_dict(torch.load("model_state_dict.pt"))
+```
+
+To find mean and standard deviation values that make sense, I arbitrarily decided that a square occupying one-third of the total pixel space would represent the average character. The mean and standard deviation of the pixel intensities are respectively $1/3$ (a third is black) and $\sqrt{2}/3$. Those values are close to those observed on the training set.
+
+I also chose to focus only on the lowercase letters for this project to reduce the number of classes to 38.
 
 ## Accuracy metrics
 
