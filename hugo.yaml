@@ -72,11 +72,13 @@ params:
   # home-info mode
   homeInfoParams:
     Title: "Hi there \U0001F44B"
-    Content: Welcome to my blog
+    Content: Welcome to my blog! I am a seasoned Quantitative Analyst looking to transition into AI. You will find here posts documenting my learning journey in Machine Learning
 
   socialIcons:
     - name: github
       url: "https://github.com/v4nn4"
+    - name: linkedin
+      url: "https://www.linkedin.com/in/romainflorentz/"
 
   analytics:
     google:
@@ -108,14 +110,10 @@ params:
     keys: ["title", "permalink", "summary", "content"]
 menu:
   main:
-    - identifier: categories
-      name: categories
-      url: /categories/
-      weight: 10
     - identifier: tags
       name: tags
       url: /tags/
-      weight: 20
+      weight: 10
 # Read: https://github.com/adityatelange/hugo-PaperMod/wiki/FAQs#using-hugos-syntax-highlighter-chroma
 pygmentsUseClasses: true
 markup:
