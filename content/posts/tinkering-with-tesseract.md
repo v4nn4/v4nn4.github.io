@@ -78,9 +78,7 @@ Sample image with contrast 2.5 and brightness 1.0, 2.5 and 3.0 :
 
 The text extracted by Tesseract for our chosen image adjustment is
 
-<div class="message">
-Բեր ձայրենակիցներեն չատերը շփոխութետն մէջ էն ինքնու թեան թԹուղն երու, անցագրի են. մասին, մանաւանդ որ վերջերս նոր կարդադրությիւններ եղան:
-</div>
+> Բեր ձայրենակիցներեն չատերը շփոխութետն մէջ էն ինքնու թեան թԹուղն երու, անցագրի են. մասին, մանաւանդ որ վերջերս նոր կարդադրությիւններ եղան:
 
 The CER is 13%, which is an character-level accuracy of 87%. Diffing the two texts (with [difflib](https://docs.python.org/3/library/difflib.html)) line by line shows what went wrong :
 
