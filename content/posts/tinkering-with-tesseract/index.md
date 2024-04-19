@@ -29,15 +29,11 @@ s a benchmark, we will use the following sample from the first page of the newsp
 
 I wrote down the *ground truth* by hand :
 
-<div class="message">
-Մեը հայրենակիցնեըէն շատերը շփոթութեան մէջ են ինքնու թեան թուղթերու, անցագրի ևն. մասին, մանաւանդ որ վերջերս նոր կարգագրութիւններ եղան:
-</div>
+> Մեը հայրենակիցնեըէն շատերը շփոթութեան մէջ են ինքնու թեան թուղթերու, անցագրի ևն. մասին, մանաւանդ որ վերջերս նոր կարգագրութիւններ եղան:
 
 which translates to (Google translate):
 
-<div class="message">
-Many of our compatriots are confused about their own papers, passports, etc. about, especially since there were new regulations recently.
-</div>
+> Many of our compatriots are confused about their own papers, passports, etc. about, especially since there were new regulations recently.
 
 Not an Armenian speaker, but this looks plausible given the historical context.
 
