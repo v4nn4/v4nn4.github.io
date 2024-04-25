@@ -1,5 +1,5 @@
 ---
-author: "v4nn4"
+author: "vanna"
 title: "Diffusion models and time reversal"
 date: "2023-10-24"
 tags: ["diffusion"]

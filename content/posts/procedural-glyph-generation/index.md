@@ -1,203 +1,118 @@
 ---
-author: "v4nn4"
-title: "Procedural Glyph Generation"
-draft: true
-date: "2024-02-24"
+author: "vanna"
+title: "Glyph generation"
+date: "2024-04-19"
 tags: ["glyph", "rust"]
 ShowToc: false
 ShowBreadCrumbs: false
 math: katex
 ---
 
-## Introduction
+{{<figure width=256 align=center src="matrix.png">}}
 
-The Proto-Sinaitic script, emerging around 1800 BCE, marks the transition from pictorial representations to phonetic symbols, laying the foundation for modern alphabets. This script, derived from Egyptian hieroglyphs, simplified complex images into letters representing sounds, a crucial step in the evolution of writing.
+Imagine you have a square grid with nine dots. How many unique shapes, or glyphs, can you create by connecting these dots with lines? Let’s calculate :
+1. With 9 dots we get $(9\times8)/2=36$ possible lines, or strokes, since each dot has to be linked with another one but not itself, and we want to avoid double counting
+2. Then every dot is either present or not in a glyph, so there are $2^{36}=6.8$ billion possible glyphs!
 
-{{< figure align=center width=200 src="/posts/procedural-glyph-generation/proto-sinaitic-script.png" >}}
+This is obviously too much, so let’s put some constraints on the type of glyphs that we are interested in.
 
-Despite the significance of such innovations, the inertia of established writing systems and the extensive corpus of texts have made the introduction of new alphabets challenging. However, notable exceptions like the Korean Hangeul, designed in the 15th century for ease of learning and use, demonstrate the potential for successful alphabet creation.
+First, we want to introduce the notion of equivalence classes. We define a equivalence class as a set of glyphs that are all equal in some sense. For instance, let’s say that two glyphs are equal if we can find a combination of 90° rotations, horizontal and vertical flips such that one glyph is transformed into the other one. The idea is that if a set of classes would form an alphabet, then no letter would « change » when reading upside down or through a mirror as it happens with Roman letters p, q, b and d.
 
-In response to this history of innovation and the challenges of introducing new writing systems, I've developed an app that allows users to experiment with alphabet design. By manipulating strokes and applying rules, users can explore the creation of unique character sets. This tool aims to make the exploration of writing system design accessible to everyone, encouraging a deeper understanding of how alphabets evolve.
+{{<figure width=256 align=center caption="An example of an equivalence class. All element of the class can be transformed into each other using symmetries and rotations" src="glyph-equivalence-class.svg">}}
 
-## Constraining the set of glyphs
+Then we want no hanging strokes. For instance in the French é, the accent is hanging above the letter e.
 
-- Except for the single stroke character, each stroke of a glyph must intersect at least once with another stroke
-- Glyphs are invariant by any combination of the following transformations:
-    - symmetry with respect to the x axis
-    - symmetry with respect to the y axis
-    - 90 degree rotation
-- The first character encountered in an equivalence class will be chosen to represent it
+## A search algorithm
 
-The algorithm goes as follows:
+Our goal is now to find all glyph equivalence classes. A natural idea is to first look for classes with one stroke, then two strokes, three strokes, etc. This works as a k+1-glyph is made from a k-glyph, which will be part of a k-equivalence class.
 
-1. By convention, start with the first stroke
-2. Find 2-strokes glyphs by adding one of the remaining strokes to the single stroke
-3. Check if they meet the criteria, that is if strokes intersect and if their equivalence class has been found
-4. If the current glyph was already encountered, skip it
-5. Find 3-strokes glyphs using 2-strokes glyphs, repeat until the unique k-glyph
+{{< figure align=center caption="All equivalence classes using 6 strokes. The 6-glyph contains all used strokes." src="6-glyph.svg" >}}
 
-Below is a visual representation of how the algorithm works. When a character is chosen (green), the subsequent paths that will encounter this glyph again will be skipped (grey).
+As shown in the above example, the number of classes will follow a bell curve. This is expected as we are limited at the beginning because of the connectivity constraint and also at the end because fewer strokes become available.
 
-{{< figure align=center width=360 src="/posts/procedural-glyph-generation/glyph_tree.svg" >}}
+{{< figure align=center caption="All equivalence classes using 10 strokes this time." src="10-glyph.svg" >}}
 
-## Implementation
+A naive search algorithm could be written as such:
 
-When implementing equality of glyphs and the `intersect` method, I found out that a much simpler point of view would be to rasterize everything and operate on matrices.
+1. Assume only a single 1-glyph. This will be our starting point
+2. For each remaining stroke, check whether adding it to the 1-glyph creates a new valid glyph. Glyphs are valid if they are connected and if their equivalence class has not been computed yet
+3. Repeat the process, using k-glyphs to search for k+1-glyphs
+4. Stop with the single n-glyph that uses all n strokes
 
-We choose a pixel width $k$ and rasterize each glyph, that is we create a square matrix of dimension $k$ of zeroes and ones representing the pixel intensities. For a glyph $g \in G$, we denote by $M^g$ such matrix. Then two glyphs $(g_1, g_2) \in G^2$ intersect if and only if
-
-$$ M^{g_1} \odot M^{g_2} \neq 0_{k}$$
-
-where $\odot$ is the element-wise product. We can also define equality between two glyphs as
-
-$$ M^{g_1} = M^{g_2} $$
-
-When adding a stroke to a glyph, we just add matrices and cap the values to one:
-
-$$  \forall (i,j) , \ M_{i,j}^{g1 + g2} = \min \left( 1, M_{i,j}^{g_1} + M_{i,j}^{g_2} \right)$$
-
-The rotation operation 
-
-
-## 
-
----
+Here is an implementation in Python:
 
 ```python
-seen = Set()
-result = {0: [Glyph(strokes)]}  # initialize with first stroke
-for order, glyphs in result.items():  # iterate on order O(n)
-    for glyph in glyphs:  # for each n-1 glyph, add a stroke and store if first of its kind, O(n) ?
-        for stroke in strokes:  # O(n)
-            if not intersect(glyph, stroke):
-                continue
-            next_glyph = Glyph(glyph.strokes + stroke)
-            if next_glyph in seen:
-                continue
-            else:
-                seen.append(next_glyph)
-            if not is_equivalent(next_glyph, glyphs):
-                result[order + 1].append(next_glyph)
-```
+def find_all_glyphs(n: int) -> dict[int, set[int]]:
+    # strokes are integers from 0 to n - 1
+    strokes = range(0, n)
 
----
+    # Initialize 1-glyph to the first stroke
+    result = {}
+    result[0] = [set(0)]
+    last_glyphs = result[0]
 
-# Implementation
-
-The transformations are :
-
-- Symmetry with respect to the x-axis $f_v$ (vertical flip)
-- Symmetry with respect to the y-axis $f_h$ (horizontal flip)
-- Rotation by $\theta=90^{\circ}$ degree around the z-axis $r_{\theta}$
-
-Some interesting properties of those transformations:
-
-- The first two are involutions, that is $ f_v^2 = f_h^2 = \textrm{id}$
-- The rotation by $90^{\circ}$ satisfies $r_{\theta}^4 = \textrm{id}$
-- $ f_v f_h = r^3 $
-- Those transformations are commutative
-
-Given those properties, we can show that the set generated by all composed transformations is 
-$$ \mathcal{T} = \\{ f_v, f_h, r, f_v r, r^2, r^3, f_h r \\} $$
-
-Here are their expression in terms of point coordinates $(x, y)$
-
-$$ 
-\begin{align}
-    \textrm{id}(x, y) &= (+x, +y) \\\\
-    f_v(x, y) &= (+x, -y) \\\\
-    f_h(x, y) &= (-x, +y) \\\\
-    r(x, y) &= (-x, -y) \\\\
-    f_v r(x, y) &= (+y, +x) \\\\
-    r^2(x, y) &= (+y, -x) \\\\
-    r^3(x, y) &= (-y, +x) \\\\
-    f_h r(x, y) &= (-y, -x)
-\end{align}
-$$
-
-The strokes will be drawn from a set of anchor points. One interesting property is to ensure that the set of anchor points is invariant by all above transformations. This ensure that all glyphs are spacially bound to the same domain, even when they are fliped and rotated. This also means that all transformations are bijections from the set of anchor points to itself. This also applies to the set of strokes.
-
-We will be working with $p$ anchor points. From those anchors points we derive
-
-$$n = \frac{p(p-1)}{2}$$
-
-strokes, which is also the number of handshakes in a group of $p$ people. For $p = 9$, this gives us $n=36$ strokes.
-
-Since glyphs will be made of the same $n$ strokes, a representation can be a series of zeroes and ones representing the absence or presence of a stroke in the glyph:
-
-$$ g = \sum_{i=0}^{n-1} a_i 2^{i}$$
-
-This way, adding a stroke to a glyph can be written as a logical or operation. Transformations can be defined using a mapping table at anchor point level.
-
-```python
-p = 9
-n = (p * (p - 1)) // 2
-strokes = [2**i for i in range(n + 1)]  # 2^i for all i <= n
-
-def get_strokes(glyph: int) -> List[int]:
-    return [i for (s, i) in enumerate(strokes) if stroke == glyph & stroke]
-
-def add(glyph1: int, glyph2: int) -> int:
-    return glyph1 | glyph2
-
-mapping_table = {
-    # "fv": { ... },
-    # ...
-    # "r^3": { ... },
-}
-
-def transform(glyph: int) -> List[int]:
-    result = []
-    strokes = get_strokes(glyph)
-    for key, fn in mapping_table.items():
-        mapped_glyph = 0
-        for s in strokes:
-            mapped_glyph = add(mapped_glyph, fn[s])
-        result.append(mapped_glyph)
+    # Look for k+1-glyphs given k-glpyhs
+    for k in range(1, n):
+        glyphs = []
+        for last_glyph in last_glyphs:
+            for stroke in strokes:
+                glyph = last_glyph.add(stroke)
+                if (
+                    glyph not in last_glyphs
+                    and glyph not in glyphs
+                    and is_connected(glyph)
+                    and not contains_equivalent(glyph, glyphs)
+                ):
+                    glyphs.append(glyph)
+        result[k] = glyphs
+        last_glyphs = result[k]
+    
     return result
 ```
 
-We also need to handle intersections has we want to ensure that there are no hanging strokes within a glyph. This can also be done ahead of time using an adjacancy matrix.
+To check whether a glyph is connected, we will need an adjacency matrix for all strokes. This matrix will tell if strokes intersect at least in one point and can be computed ahead of time. Then using this matrix we can build a graph linking points and perform a Depth-First Search (DFS) on any node to verify if all other nodes can be reached.
 
-$$ M_{i, j} = 1_{\textrm{intersect}(s_i, s_j)}$$
+Checking if a glyph is part of a class is done by applying all transformations to a glyph and checking whether one of them has been already found. The transformations can be computed ahead of time for all strokes.
 
-```python
-adjacency_matrix = [[...], ..., [...]]  # 1 if strokes intersect, else 0
+Since we do not need strokes coordinates at runtime, we can represent a glyph in binary as such
 
-def are_strokes_intersecting(glyph: int) -> bool:
-    indices = compute_stroke_indices(glyph)
-    for i in indices:
-        intersection_found = False
-        for j in indices:
-            if adjacency_matrix[i][j]:
-                intersection_found = True
-        if not intersection_found:
-            return False
-    return True
-```
+$$ G = \sum_{i=1}^n w_i 2^i, \ w_i \in \\{0, 1\\} $$
 
-Then the generative algorithm goes as follows:
-
-1. 
+This way, adding a stroke to a glyph will be written as a binary OR operation. Checking if two glyphs are equal amounts to checking if two integers are equal, which is very fast.
 
 ```python
-def generate() -> List[int]:
-    gs = {i: [] for i in range(n + 1)}  # order by number of strokes
-    gs[0].append(s0)
-    for i, g in glyphs.items():
-        if i == 0:
-            pass # already done with first index
-        for s in strokes:
-            g_next = add(g, s)
-            if are_strokes_intersecting(g_next):
-                gs_transformed = transform(g_next)
-                if all(gs_transformed not in glyphs[i + 1]):
-                    glyphs[i + 1].append(g_next)
+@dataclass
+class Stroke:
+    index: int
+
+
+@dataclass
+class Glyph:
+    strokes: list[Stroke]
+    identifier: int
+
+    def __eq__(self, other: "Glyph") -> bool:
+        return self.identifier == other.identifier  # fast eq
+
+    def __or__(self, other: "Glyph") -> "Glyph":
+        indices = [s.index for s in self.strokes] + [s.index for s in other.strokes]
+        indices = list(set(indices))
+        return Glyph(
+            strokes=[Stroke(index=index) for index in indices],
+            identifier=self.identifier | other.identifier,
+        )
+
+    @staticmethod
+    def from_stroke(stroke: Stroke) -> "Glyph":
+        return Glyph(strokes=[stroke], identifier=2**stroke.index)
 ```
 
+## Playground
 
+A playground is available at https://v4nn4.github.io/glyphs-generator/ for you to try! It is based on a Rust implemetation that compiles to WebAssembly using [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
-# Optimization
+{{<figure align=center caption="The playground lets you explore glyphs based on a set of strokes" src="app.png">}}
 
-[^1]: Albright, William F. 1969. The Proto­Sinaitic Inscriptions and Their Decipherment. Harvard Theological
-Studies, XXII. 2nd printing. Cambridge: Harvard University Press.
+Some links:
+- Code repository used for this blog post : https://github.com/v4nn4/glyphs-generator
+- Rust library compiled to WebAssembly : https://github.com/v4nn4/glyphs-generator-rs

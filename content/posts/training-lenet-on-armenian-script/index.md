@@ -1,5 +1,5 @@
 ---
-author: "v4nn4"
+author: "vanna"
 title: "Training LeNet-5 on Armenian script"
 date: "2023-10-16"
 tags: ["cnn", "lenet", "armenian"]
@@ -8,7 +8,7 @@ ShowBreadCrumbs: false
 math: mathjax
 ---
 
-Following [Tinkering with Tesseract]({{< ref "posts/tinkering-with-tesseract.md" >}} "Tinkering with Tesseract"), I wanted to gain a better understanding of how OCR systems work. So, I decided to start with building my own character recognition engine using [PyTorch](https://github.com/pytorch/pytorch). The code is available at [v4nn4/hynet](https://github.com/v4nn4/hynet).
+Following [Tinkering with Tesseract]({{< ref "posts/tinkering-with-tesseract.md" >}} "Tinkering with Tesseract"), I wanted to gain a better understanding of how OCR systems work. So, I decided to start with building my own character recognition engine using [PyTorch](https://github.com/pytorch/pytorch). The code is available at [vanna/hynet](https://github.com/vanna/hynet).
 
 ## Generating a dataset
 
@@ -153,7 +153,7 @@ Other techniques either had no effect or decreased accuracy :
 - **Batch normalization** : we tried it after the convolutional layers and after the fully connected layers, but it did not improve accuracy. It is probably because our weight initialization is already good, and the training is short
 - **Dropout** : it switches off some layers at random. We applied it on the fully connected layers, but did not observe an improvement in accuracy
 
-The training code can be found [here](https://github.com/v4nn4/hynet/blob/main/hynet/train.py). In essence, this is how it reads in PyTorch :
+The training code can be found [here](https://github.com/vanna/hynet/blob/main/hynet/train.py). In essence, this is how it reads in PyTorch :
 
 ```python
 from torch import nn, optim

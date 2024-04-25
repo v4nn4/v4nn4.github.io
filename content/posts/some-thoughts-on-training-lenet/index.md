@@ -1,5 +1,5 @@
 ---
-author: "v4nn4"
+author: "vanna"
 title: "Some thoughts on training LeNet"
 date: "2023-12-30"
 tags: ["cnn", "lenet", "armenian"]
