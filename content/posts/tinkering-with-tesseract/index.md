@@ -1,5 +1,5 @@
 ---
-author: "vanna"
+author: "v4nn4"
 title: "Tinkering with Tesseract"
 date: "2023-10-13"
 tags: ["tesseract", "ocr"]

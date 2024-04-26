@@ -1,5 +1,5 @@
 ---
-author: "vanna"
+author: "v4nn4"
 title: "Glyph generation"
 date: "2024-04-19"
 tags: ["glyph", "rust"]
@@ -16,11 +16,11 @@ Imagine you have a square grid with nine dots. How many unique shapes, or glyphs
 
 This is obviously too much, so let’s put some constraints on the type of glyphs that we are interested in.
 
-First, we want to introduce the notion of equivalence classes. We define a equivalence class as a set of glyphs that are all equal in some sense. For instance, let’s say that two glyphs are equal if we can find a combination of 90° rotations, horizontal and vertical flips such that one glyph is transformed into the other one. The idea is that if a set of classes would form an alphabet, then no letter would « change » when reading upside down or through a mirror as it happens with Roman letters p, q, b and d.
+First, we want to introduce the notion of equivalence classes. We define an equivalence class as a set of glyphs that are all equal in some sense. For instance, let’s say that two glyphs are equal if we can find a combination of 90° rotations, horizontal and vertical flips such that one glyph is transformed into the other one. The idea is that if a set of classes would form an alphabet, then no letter would « change » when reading upside down or through a mirror as it happens with Roman letters p, q, b and d.
 
 {{<figure width=256 align=center caption="An example of an equivalence class. All element of the class can be transformed into each other using symmetries and rotations" src="glyph-equivalence-class.svg">}}
 
-Then we want no hanging strokes. For instance in the French é, the accent is hanging above the letter e.
+Then we want no hanging strokes. For instance in the French é, the accent is hanging above the letter e. We can enforce this by making sure that the glyph, viewed as a graph of strokes, is connected.
 
 ## A search algorithm
 
