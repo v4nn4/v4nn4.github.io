@@ -11,8 +11,8 @@ math: katex
 {{<figure width=256 align=center src="matrix.png">}}
 
 Imagine you have a square grid with nine dots. How many unique shapes, or glyphs, can you create by connecting these dots with lines? Let’s calculate :
-1. With 9 dots we get $(9\times8)/2=36$ possible lines, or strokes, since each dot has to be linked with another one but not itself, and we want to avoid double counting
-2. Then every dot is either present or not in a glyph, so there are $2^{36}=6.8$ billion possible glyphs!
+- With 9 dots we get $(9\times8)/2=36$ possible lines, or strokes, since each dot has to be linked with another one but not itself, and we want to avoid double counting
+- Every stroke is either present or not in a glyph, so there are $2^{36}=6.8$ billion possible glyphs!
 
 This is obviously too much, so let’s put some constraints on the type of glyphs that we are interested in.
 
