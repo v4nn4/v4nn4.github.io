@@ -10,34 +10,34 @@ math: katex
 
 {{<figure width=256 align=center src="matrix.png">}}
 
-Imagine you have a square grid with nine dots. How many unique shapes, or glyphs, can you create by connecting these dots with lines? Let’s calculate :
-- With 9 dots we get $(9\times8)/2=36$ possible lines, or strokes, since each dot has to be linked with another one but not itself, and we want to avoid double counting
-- Every stroke is either present or not in a glyph, so there are $2^{36}=6.8$ billion possible glyphs!
+Imagine a simple square grid with nine dots like the one above. What if you were challenged to draw as many unique shapes or "glyphs" as possible by connecting these dots? At first glance, it seems straightforward, but let's dive deeper into the complexity.
 
-This is obviously too much, so let’s put some constraints on the type of glyphs that we are interested in.
+Each of the nine dots can be connected in pairs, forming lines that are the strokes of our glyphs. Calculating all possible pairings, we find there are $(9\times8)/2=36$ unique strokes. Now, considering each stroke can either be included in or excluded from a glyph, the potential combinations explode to a staggering $2^{36} = 6.8$ billion possible glyphs! Clearly, this number is impractically high for any useful application.
 
-First, we want to introduce the notion of equivalence classes. We define an equivalence class as a set of glyphs that are all equal in some sense. For instance, let’s say that two glyphs are equal if we can find a combination of 90° rotations, horizontal and vertical flips such that one glyph is transformed into the other one. The idea is that if a set of classes would form an alphabet, then no letter would « change » when reading upside down or through a mirror as it happens with Roman letters p, q, b and d.
+To manage this complexity, we introduce a concept called equivalence classes. These classes group glyphs that are visually identical under certain transformations, such as 90° rotations and horizontal or vertical flips. This approach mirrors the challenges of traditional typography, where certain letters, like 'p', 'q', 'b', and 'd', appear as mirrored or rotated versions of each other. This set of transformations is known in mathematics as the [dihedral group](https://en.wikipedia.org/wiki/Dihedral_group) $D_4$.
 
 {{<figure width=256 align=center caption="An example of an equivalence class. All element of the class can be transformed into each other using symmetries and rotations" src="glyph-equivalence-class.svg">}}
 
-Then we want no hanging strokes. For instance in the French é, the accent is hanging above the letter e. We can enforce this by making sure that the glyph, viewed as a graph of strokes, is connected.
+Next, we aim to avoid any isolated strokes. Take, for example, the French letter 'é', where the accent appears detached above the letter 'e'. To address this, we ensure that our glyphs are fully connected, meaning every stroke must link to another, creating a cohesive graph of lines without any floating elements.
+
+By focusing only on distinct visual symbols that remain consistent under these transformations, we significantly reduce the number of relevant glyphs, making it feasible to create a unique, usable set. Let's explore how we can harness this concept to design an effective glyph generation engine.
 
 ## A search algorithm
 
-Our goal is now to find all glyph equivalence classes. A natural idea is to first look for classes with one stroke, then two strokes, three strokes, etc. This works as a k+1-glyph is made from a k-glyph, which will be part of a k-equivalence class.
+Our objective is to identify all glyph equivalence classes. A practical approach is to first look for classes with one stroke, then two strokes, three strokes, etc. This mewthod works as a k+1-glyph is made from a k-glyph, which will be part of a k-equivalence class.
 
 {{< figure align=center caption="All equivalence classes using 6 strokes. The 6-glyph contains all used strokes." src="6-glyph.svg" >}}
 
-As shown in the above example, the number of classes will follow a bell curve. This is expected as we are limited at the beginning because of the connectivity constraint and also at the end because fewer strokes become available.
+As shown in the above example, the number of classes will tend to resemble a bell curve. Initially, the number of possible classes is restricted by the need for all elements to connect, while later stages see limitations due to a diminishing number of available strokes.
 
 {{< figure align=center caption="All equivalence classes using 10 strokes this time." src="10-glyph.svg" >}}
 
-A naive search algorithm could be written as such:
+Here's how a basic search algorithm might operate:
 
-1. Assume only a single 1-glyph. This will be our starting point
-2. For each remaining stroke, check whether adding it to the 1-glyph creates a new valid glyph. Glyphs are valid if they are connected and if their equivalence class has not been computed yet
-3. Repeat the process, using k-glyphs to search for k+1-glyphs
-4. Stop with the single n-glyph that uses all n strokes
+1. Begin with a single stroke, considering this our initial glyph
+2. For each additional stroke, check if adding it to the existing glyph forms a new valid configuration. A glyph qualifies as valid if it is connected and its equivalence class hasn't yet been identified
+3. Continue this process, using existing glyphs with k strokes to explore possibilities for glyphs with k+1 strokes
+4. The algorithm concludes when it creates the unique glyph that incorporates every possible stroke
 
 Here is an implementation in Python:
 
@@ -70,11 +70,13 @@ def find_all_glyphs(n: int) -> dict[int, set[int]]:
     return result
 ```
 
-To check whether a glyph is connected, we will need an adjacency matrix for all strokes. This matrix will tell if strokes intersect at least in one point and can be computed ahead of time. Then using this matrix we can build a graph linking points and perform a Depth-First Search (DFS) on any node to verify if all other nodes can be reached.
+In order to implement the `is_connected` function, we will need an adjacency matrix at stroke level. This matrix will tell if strokes intersect at least in one point and can be computed ahead of time. Then using this matrix we can build a graph linking strokes and run a [Depth-First Search](https://en.wikipedia.org/wiki/Depth-first_search) algorithm on any node to verify if all other nodes can be reached.
 
 Checking if a glyph is part of a class is done by applying all transformations to a glyph and checking whether one of them has been already found. The transformations can be computed ahead of time for all strokes.
 
-Since we do not need strokes coordinates at runtime, we can represent a glyph in binary as such
+## Binary representation    
+
+Since we do not need stroke coordinates at runtime, we can represent a glyph in binary as such
 
 $$ G = \sum_{i=1}^n w_i 2^i, \ w_i \in \\{0, 1\\} $$
 
@@ -109,10 +111,10 @@ class Glyph:
 
 ## Playground
 
-A playground is available at https://v4nn4.github.io/glyphs-generator/ for you to try! It is based on a Rust implemetation that compiles to WebAssembly using [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
+A playground is available [here](https://v4nn4.github.io/glyphs-generator/) for you to try! It is based on a Rust implementation that runs in the browser using WebAssembly and [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
 {{<figure align=center caption="The playground lets you explore glyphs based on a set of strokes" src="app.png">}}
 
-Some links:
-- Code repository used for this blog post : https://github.com/v4nn4/glyphs-generator
-- Rust library compiled to WebAssembly : https://github.com/v4nn4/glyphs-generator-rs
+Python and Rust implementation repositories:
+- 🐍 [v4nn4/glyphs-generator](https://github.com/v4nn4/glyphs-generator)
+- 🦀 [v4nn4/glyphs-generator-rs](https://github.com/v4nn4/glyphs-generator-rs)
