@@ -1,7 +1,7 @@
 ---
 author: "v4nn4"
 title: "Glyph generation"
-date: "2024-04-19"
+date: "2024-04-26"
 tags: ["glyph", "rust"]
 ShowToc: false
 ShowBreadCrumbs: false
