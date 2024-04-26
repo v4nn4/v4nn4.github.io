@@ -3,3 +3,8 @@
 {{ else if (eq $.Page.Params.math "mathjax") }}
   {{ partial "helpers/mathjax.html" . }}
 {{ end }}
+<meta property="og:title" content="{{ .Title }}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ .Permalink }}" />
+<meta property="og:image" content="{{ with .Params.images }}{{ . | absURL }}{{ else }}{{ "images/default-thumbnail.png" | absURL }}{{ end }}" />
+<meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Summary }}{{ end }}" />

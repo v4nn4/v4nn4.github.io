@@ -6,6 +6,8 @@ tags: ["glyph", "rust"]
 ShowToc: false
 ShowBreadCrumbs: false
 math: katex
+images:
+  - glyphs.png
 ---
 
 {{<figure width=256 align=center src="matrix.png">}}
