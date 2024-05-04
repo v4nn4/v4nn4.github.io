@@ -67,6 +67,11 @@ params:
       - name: Tags
         url: tags
 
+   # home-info mode
+  homeInfoParams:
+    Title: "Hi there \U0001F44B"
+    Content: Welcome to my blog! I am a Senior Quantitative Analyst looking to transition into AI. You will find here posts documenting my learning journey in Machine Learning.
+
   socialIcons:
     - name: github
       url: "https://github.com/v4nn4"
