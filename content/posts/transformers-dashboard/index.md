@@ -40,7 +40,7 @@ P_{\textrm{MHA}} &= h (2d_{\textrm{model}}d_k + 2d_k + d_{\textrm{model}}d_v + d
 \end{aligned}
 $$
 
-- **Feed-forward block** : in both the encoder and the decoder, the output of size $d_{\textrm{model}}$ is passed throught a feed-forward block [^1] : $f(x) = ReLU(xW_1 + b_1)W_2 + b_2$. This leads to the following number of parameters
+- **Feed-forward block** : in both the encoder and the decoder, the output of size $d_{\textrm{model}}$ is passed throught a feed-forward block [^1] : $f(x) = \textrm{ReLU}(xW_1 + b_1)W_2 + b_2$. This leads to the following number of parameters
 
 $$ P_{\textrm{FFN}} = 2 (d_{\textrm{ff}} d_{\textrm{model}} + d_{\textrm{model}})$$
 
