@@ -1,4 +1,4 @@
-title: v4nn4's blog
+title: Romain Florentz blog
 paginate: 10
 theme: PaperMod
 
@@ -13,11 +13,10 @@ minify:
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  title: v4nn4's blog
-  description: "v4nn4's blog"
+  title: Romain Florentz blog
+  description: ""
   keywords: [Blog, Portfolio, PaperMod]
   author: Me
-  # author: ["Me", "You"] # multiple authors
   images: ["<link or path of image for opengraph, twitter-cards>"]
   DateFormat: "January 2, 2006"
   defaultTheme: auto # dark, light
@@ -49,7 +48,7 @@ params:
     safari_pinned_tab: ""
 
   label:
-    text: "v4nn4's blog"
+    text: "Romain Florentz blog"
     iconHeight: 35
 
   # profile-mode
@@ -57,7 +56,7 @@ params:
     enabled: false # needs to be explicitly set
     title: ExampleSite
     subtitle: "This is subtitle"
-    imageUrl: "<img location>"
+    imageUrl: "images/header.webp"
     imageWidth: 120
     imageHeight: 120
     imageTitle: my image
@@ -69,8 +68,8 @@ params:
 
    # home-info mode
   homeInfoParams:
-    Title: "Hi there \U0001F44B"
-    Content: Welcome to my blog! I am a Senior Quantitative Analyst looking to transition into AI. You will find here posts documenting my learning journey in Machine Learning.
+    Content: Welcome to my blog. Sharing ideas on math, programming, and AI systems.
+    Image: "images/blog.webp"
 
   socialIcons:
     - name: github

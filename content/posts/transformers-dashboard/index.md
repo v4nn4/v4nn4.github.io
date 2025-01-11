@@ -1,6 +1,6 @@
 ---
 author: "v4nn4"
-title: "Transformers Dashboard 🤖📈"
+title: "Transformers Dashboard"
 date: "2024-05-04"
 tags: []
 ShowToc: false
