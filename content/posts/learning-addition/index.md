@@ -12,9 +12,9 @@ math: mathjax
 
 ![aliens](./aliens.webp)
 
-Inspired by Andrej Karpathy's [nanoGPT](https://github.com/karpathy/nanoGPT) and his great YouTube series[^1], I decided to train my own transformer on a simple dataset. Additionally, I wanted to calculate precisely how well the model would perform. This is not trivial when working with text, as it often relies on a so-called *vibe check*, which is inherently subjective.
+Inspired by Andrej Karpathy's [nanoGPT](https://github.com/karpathy/nanoGPT) and his excellent YouTube series[^1], I decided to train my own transformer model on a simple dataset. Additionally, I aimed to calculate precisely how well the model performs. This is not trivial when working with text, as evaluations often rely on a so-called *vibe check*, which is inherently subjective.
 
-A natural candidate for an objective evaluation is to train the model to generate text representing equations of the form $x+y=z$. Evaluating the model then comes down to checking the format and comparing both sides of the equations. While learning the format doesn't look too hard, learning addition itself seems like a daunting task.
+A natural choice for objective evaluation is to train the model to generate text representing equations in the form $x + y = z$. Evaluating the model then becomes a straightforward task: checking the format and comparing both sides of the equations. While learning the format doesn't seem too challenging, learning addition itself is a daunting task.
 
 I realized (a bit late) that Andrej proposed this as an exercise to the viewer in his video description:
 
@@ -24,16 +24,16 @@ Let's tackle the addition learning problem!
 
 ## The Problem
 
-We are given a text representing a list of equations of the form $x+y=z$ with $x$ and $y$ two positive integers. We will choose 3-digit integers to have a dataset of 1 million equations. Equations will be written this way:
+We are given text representing a list of equations in the form $x + y = z$, where $x$ and $y$ are two positive integers. To simplify the dataset, we’ll use 3-digit integers, resulting in 1 million unique equations. Each equation is written as follows:
 
 ```bash
 001+001=0002
 123+456=0579
 ```
 
-Leading zeroes are used to maintain consistent positional encoding, which significantly enhances convergence. This representation eliminates the need for padding tokens during batch inference, as all equations are uniformly represented as arrays of size 12.
+Leading zeroes are included to maintain consistent positional encoding, which significantly enhances convergence. This representation eliminates the need for padding tokens during batch inference, as all equations are uniformly represented as arrays of size 12.
 
-Here is how our dataset is generated:
+Here’s how the dataset is generated:
 
 ```python
 digits = range(1000)
@@ -47,27 +47,27 @@ train_set = equations[:split_index]
 test_set = equations[split_index:]
 ```
 
-We then divide 50/50 the `test_set` into a validation set used for validation loss monitoring, and our final test set. We use the following vocabulary: `0123456789+=;`. The semicolon will be used to separate equations. We will note the vocabulary size $V$.
+We then split the `test_set` evenly into a validation set (used for loss monitoring) and a final test set. The vocabulary used is: `0123456789+=;`. The semicolon separates equations. The vocabulary size is noted as $V$.
 
 ## Naive solutions
 
-Before exploring the world of transformers, let's start with simpler models.
+Before diving into transformers, let’s explore simpler models.
 
 ### 2-gram model
 
-The 2-gram (or bigram) model predicts the next token based solely on the previous token. This is achieved by examining all consecutive tokens in the dataset and counting their occurrences. The result can be shown in a $V \times V$ matrix:
+The 2-gram (or bigram) model predicts the next token based solely on the previous token. This is achieved by examining all consecutive tokens in the dataset and counting their occurrences. The result is visualized as a $V \times V$ matrix:
 
 {{< figure align=center src="/posts/learning-addition/bigram-grey.png" >}}
 
-We see that `0` and `1` have a different behavior versus other digits. For `0`, this has to do with the padding that we used. For `1`, the reason is that the digits of the sum on the right hand side are not homogeneously distributed. In particular, all sums higher than a thousand have a `1` as their first digit, which skews the distribution since our largest sum is `1998`.
+We notice that `0` and `1` behave differently compared to other digits. For `0`, this relates to the padding we used. For `1`, the reason lies in the distribution of sums on the right-hand side: all sums exceeding a thousand begin with `1`. This skews the distribution, as the largest possible sum is `1998`.
 
-If we follow the probability trail and constrain the model to output 4 digits, we see that this model will generate a number between 900 and 999.
+If we follow the probability trail and constrain the model to output 4 digits, it will generate numbers between 900 and 999.
 
 ### 1-nearest neighbor model
 
-The previous model has very few parameters but fails to capture the complexity of addition. Let's try instead to use the entire train set at inference time.
+The 2-gram model has very few parameters but fails to capture the complexity of addition. Let’s try using the entire training set at inference time instead.
 
-For a given equation, we consider the equations in the dataset that differ only from one digit. This should be feasible if the dataset is properly shuffled and the train set is large enough. For instance if we consider 123+456=579, here are some such *neighbors*:
+For a given equation, we identify equations in the dataset that differ by only one digit. This approach should work if the dataset is properly shuffled and sufficiently large. For instance, given `123 + 456 = 579`, some *neighbors* might look like this:
 
 ```bash
 122+456=0578
@@ -76,36 +76,35 @@ For a given equation, we consider the equations in the dataset that differ only 
 123+856=0979
 ```
 
+There are at most $6 \times 9 = 54$ neighbors for each equation. By counting the occurrences of digits on the right-hand side of these equations, we compute the most likely first, second, and third digits.
 
-There are at most $6 \times 9 = 54$ neighbors found in the complete set for each equation. We count the occurences of digits in the right hand side of those equations to compute the most likely first digit, second digit, etc.
-
-It gets pretty compute intensive, so I checked this prediction method for 100 equations only. However, the percentage of correct predictions seem to converge quickly.
+This method becomes computationally intensive, so I tested it on only 100 equations. However, the accuracy percentage converges quickly:
 
 {{< figure align=center src="/posts/learning-addition/onenn.png" >}}
 
-What we see, is that if we work with 50% or more of the total set, this method will likely yield a perfect result. If we have access to a smaller fraction at training time, we won't be ab;e to properly learn addition. Note that no real learning is happening here.
-
-The ultimate goal is to compress the information contained in the training set into a tiny internal representation.
+The results suggest that if we use 50% or more of the total dataset, this method yields near-perfect predictions. With smaller fractions, the model struggles to "learn" addition. Note that no real learning occurs here—the goal remains to compress the training set into a compact representation.
 
 ## Training a GPT
 
-We now turn to a transformer model, namely the GPT-2 model presnted in tinygpt.
+Next, we turn to a transformer model, specifically GPT-2, as implemented in TinyGPT.
 
-As usual, we will create `batch_size` batches of indices and targets by sliding a window of size `block_size` across the dataset. We then iteratively train a transformer to predict the next token by minimizing the loss function across all batches.
+As usual, we create `batch_size` batches of indices and targets by sliding a `block_size` window across the dataset. The transformer is then trained iteratively to predict the next token by minimizing the loss across all batches.
 
 ### A few tweaks
 
-Before I present some results, here are some tweaks that i made to the orignal model:
+Before presenting the results, here are some adjustments I made to the original model:
 
-- Every thousand iterations, I use batch inference on the entire test set to predict the result of addition. My real objective is to be close to 100% correct prediction on the unseen data. The validation set is separated and only used for loss monitoring vs the training loss. I compute an *approximative score* by comparing the absolute value of actual and exepcted right hand side, and an *exact score* by counting the number of correctly predicted results
-- As suggested by Andrej, I mask the loss everywhere except after the equal sign, which is where I want to model to focus on. I first tried without it and it definitely improves training by a large margin, allows smaller models to properly learn
-- I am using the [outlines](https://github.com/dottxt-ai/outlines) library and their `RegexLogitsProcessor` to constrain the generation. Basically I want to ensure that only integers are found after the equal sign, using various regex patterns depending on whether I use leading zeroes or not, whether I use addition, multiplication, division, etc. This is only done at generation time. It requires to use a bit of the outlines API (tokenizer and a specific `generate` function).
-- I found dropout to be useless for my model sizes. Also, `torch.compile` only works without dropout on `mps` devices (as of Jan 2025)
-- The learning rate needs to be adjusted when changing the model size, especially the embedding dimension $d_{\textrm{model}}$. I modify it proportionally from a reference of $5 \times 10^{-3}$ for $d_{\textrm{model}}=128$ but there might be a better way to do this
+- Every 1,000 iterations, I perform batch inference on the entire test set to predict addition results. My primary objective is achieving close to 100% accuracy on unseen data. The validation set is only used for monitoring loss versus training loss.
+- I compute two metrics: 
+  - *Approximative score*: Comparing the absolute difference between actual and expected values on the right-hand side.
+  - *Exact score*: Counting the number of correctly predicted results.
+- Following Andrej’s suggestion, I mask the loss everywhere except after the equal sign, focusing the model on critical predictions. Training without this masking significantly worsens performance.
+- I used the [outlines](https://github.com/dottxt-ai/outlines) library and its `RegexLogitsProcessor` to constrain generation. For example, I enforced regex patterns to ensure only valid integers appear after the equal sign.
+- Dropout was unnecessary for my model sizes. Also, `torch.compile` only works without dropout on `mps` devices (as of January 2025).
 
 ### Results
 
-I experimented with various model sizes by varying $d_{\textrm{model}}$ (embedding dimension), $N$ (number of layers) and $h$ (number of attention heads).
+I experimented with varying model sizes by adjusting $d_{\textrm{model}}$ (embedding dimension), $N$ (number of layers), and $h$ (attention heads).
 
 From the data I gathered in [Transformers Dashboard]({{< ref "posts/transformers-dashboard.md" >}} "Transformers Dashboard") I observed that:
 
@@ -138,17 +137,17 @@ Following Andrej's advice of using powers of two throughout, we are not left wit
 
 ## Observations
 
-- The initial learning rate plays a big role in speeding convergence. I haven't found a good rule of thumb for changing it when increasing or decreasing model size
-- Using the approximative score as a guide for the scheduler was a good call as it is smoother than the exact score. I used the `ReduceLROnPlateau` scheduler without too much thinking, and I see now that nanogpt used a custom [`get_lr`](https://github.com/karpathy/nanoGPT/blob/master/train.py#L231) function, so there is definitely something to study there
-- Small models are dependent to the random seed, sometimes they learn quickly sometimes not at all. I trained an even smaller model with $d_{\textrm{model}} =32, N = h = 1$ to about 80% exact score, but not consistently. Having a single attention matrix would be great for visualization!
+- The initial learning rate heavily influences convergence speed. I haven’t yet found a robust heuristic for scaling it with model size.
+- Using the approximative score for the learning rate scheduler was effective, as it’s smoother than the exact score. If the learning rate decreases too fast, the model gets stuck and stops learning.
+- Small models are highly sensitive to random seeds, sometimes learning quickly, sometimes failing entirely.
 
 ## Final Thoughts
 
-I spent way too much time on this that I originally thought I would, but it was totally worth it! Huge thank you to Andrej for his amzing tutorials. Here are some of the things I would like to investigate next:
+I spent far more time on this project than anticipated, but it was absolutely worth it! Huge thanks to [@karpathy](https://x.com/karpathy?lang=fr) for his amazing tutorials. Here’s what I’d like to explore next:
 
-- Read some papers about learning rate scheduling. After seeing the nanogpt implementation (cosine with warmup), it seems my understanding was too basic
-- Review litterature on position encodings. Addition is cmmmutative, which makes me think that the absolute position encoding might not be the best idea
-- Use [outlines](https://github.com/dottxt-ai/outlines) for constrained generation in my next LLM project
+- Learn more about learning rate scheduling. The current nanogpt implementation (cosine with warmup) caught my attention.
+- Research position encodings further. Addition is commutative, which makes absolute position encoding potentially suboptimal.
+- Use [outlines](https://github.com/dottxt-ai/outlines) for constrained generation in future LLM projects.
 
 That will be all for today 🙏.
 
