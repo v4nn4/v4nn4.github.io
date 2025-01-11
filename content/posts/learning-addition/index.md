@@ -114,6 +114,14 @@ From the data I gathered in [Transformers Dashboard]({{< ref "posts/transformers
 
 Following Andrej's advice of using powers of two throughout, we are not left with many options for our small experiment. I experimented with the following settings:
 
+| Size | $d_{\textrm{model}}$ | $N$ | $h$ | Params |
+|------|----------------------|-----|-----|--------|
+| Small | 32 | 2 | 2 | 0.03M |
+| Medium | 64 | 2 | 2 | 0.1M |
+| Large | 128 | 2 | 2 | 0.4M |
+
+More details on my training specs:
+
 - Training set : 100k equations (10% of the actual dataset). The idea here is to crush the 1-nn model since we know it cannot go above a score of 50% in this case
 - Test set : 450k equations (50% of 90%)
 - Batch size : 32
@@ -121,15 +129,7 @@ Following Andrej's advice of using powers of two throughout, we are not left wit
 - Learning rate : starts at 0.001, then uses `ReduceLROnPlateau` with patience of 5 and factor of 0.5
 - Run on my Macbook Air, 8GB RAM, M2 chip using PyTorch 2.5.1
 
-| Size | $d_{\textrm{model}}$ | $N$ | $h$ | Params | Loss < 0.9 | Loss @40k |  Score @40k|
-|------|----------------------|-----|-----|----|--------|----------|----|-------|
-| Small | 32 | 2 | 2 | 0.03M | 12k | 0.89 | 76% |
-| Medium | 64 | 2 | 2 | 0.1M | 8k | 0.87 | 98% |
-| Large | 128 | 2 | 2 | 0.4M | 6k | 0.88 | 98% |
-
-0.8609 | 99%
-0.8643 | 0.9200, lr 0.000125
-0.8639 | 0.9500, lr 0.0005
+And finally some results:
 
 {{< figure align=center src="/posts/learning-addition/loss.png" >}}
 {{< figure align=center src="/posts/learning-addition/score_approx.png" >}}
