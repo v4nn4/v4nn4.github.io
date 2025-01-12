@@ -63,7 +63,7 @@ We notice that `0` and `1` behave differently compared to other digits. For `0`,
 
 If we follow the probability trail and constrain the model to output 4 digits, it will generate numbers between 900 and 999.
 
-### 1-nearest neighbor model
+### Nearest neighbors model
 
 The 2-gram model has very few parameters but fails to capture the complexity of addition. Let’s try using the entire training set at inference time instead.
 
@@ -78,9 +78,9 @@ For a given equation, we identify equations in the dataset that differ by only o
 
 There are at most $6 \times 9 = 54$ neighbors for each equation. By counting the occurrences of digits on the right-hand side of these equations, we compute the most likely first, second, and third digits.
 
-This method becomes computationally intensive, so I tested it on only 100 equations. However, the accuracy percentage converges quickly:
+This method becomes computationally intensive, so I tested it on only 100 equations. However, the proportion of accurate predictions, which I call exact score, converges quickly:
 
-{{< figure align=center src="/posts/learning-addition/onenn.png" >}}
+{{< figure align=center src="/posts/learning-addition/nn.png" >}}
 
 The results suggest that if we use 50% or more of the total dataset, this method yields near-perfect predictions. With smaller fractions, the model struggles to "learn" addition. Note that no real learning occurs here—the goal remains to compress the training set into a compact representation.
 
@@ -122,7 +122,7 @@ Following Andrej's advice of using powers of two throughout, we are not left wit
 
 More details on my training specs:
 
-- Training set : 100k equations (10% of the actual dataset). The idea here is to crush the 1-nn model since we know it cannot go above a score of 50% in this case
+- Training set : 100k equations (10% of the actual dataset). The idea here is to crush the nearest neighbors model since we know it cannot go above a score of 50% in this case
 - Test set : 450k equations (50% of 90%)
 - Batch size : 32
 - Block size : 120, which should yield around 9-10 examples per batch
@@ -148,6 +148,8 @@ I spent far more time on this project than anticipated, but it was absolutely wo
 - Learn more about learning rate scheduling. The current nanogpt implementation (cosine with warmup) caught my attention.
 - Research position encodings further. Addition is commutative, which makes absolute position encoding potentially suboptimal.
 - Use [outlines](https://github.com/dottxt-ai/outlines) for constrained generation in future LLM projects.
+
+Code available here : https://github.com/v4nn4/gpt-add.
 
 That will be all for today 🙏.
 
