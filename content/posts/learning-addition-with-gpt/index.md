@@ -3,11 +3,11 @@
 author: "v4nn4"
 title: "Learning Addition with GPT"
 date: "2024-07-06"
-tags: ["gpt", "llm", "pytorch"]
+tags: ["gpt", "pytorch", "outlines", "llm"]
 ShowToc: false
 ShowBreadCrumbs: false
 math: mathjax
--------------
+---
 
 
 ![aliens](./aliens.webp)
@@ -57,7 +57,7 @@ Before diving into transformers, let’s explore simpler models.
 
 The 2-gram (or bigram) model predicts the next token based solely on the previous token. This is achieved by examining all consecutive tokens in the dataset and counting their occurrences. The result is visualized as a $V \times V$ matrix:
 
-{{< figure align=center src="/posts/learning-addition/bigram-grey.png" >}}
+{{< figure align=center src="/posts/learning-addition-with-gpt/bigram-grey.png" >}}
 
 We notice that `0` and `1` behave differently compared to other digits. For `0`, this relates to the padding we used. For `1`, the reason lies in the distribution of sums on the right-hand side: all sums exceeding a thousand begin with `1`. This skews the distribution, as the largest possible sum is `1998`.
 
@@ -80,7 +80,7 @@ There are at most $6 \times 9 = 54$ neighbors for each equation. By counting the
 
 This method becomes computationally intensive, so I tested it on only 100 equations. However, the proportion of accurate predictions, which I call exact score, converges quickly:
 
-{{< figure align=center src="/posts/learning-addition/nn.png" >}}
+{{< figure align=center src="/posts/learning-addition-with-gpt/nn.png" >}}
 
 The results suggest that if we use 50% or more of the total dataset, this method yields near-perfect predictions. With smaller fractions, the model struggles to "learn" addition. Note that no real learning occurs here—the goal remains to compress the training set into a compact representation.
 
@@ -131,13 +131,14 @@ More details on my training specs:
 
 And finally some results:
 
-{{< figure align=center src="/posts/learning-addition/loss.png" >}}
-{{< figure align=center src="/posts/learning-addition/score_approx.png" >}}
-{{< figure align=center src="/posts/learning-addition/score_exact.png" >}}
+{{< figure align=center src="/posts/learning-addition-with-gpt/loss.png" >}}
+{{< figure align=center src="/posts/learning-addition-with-gpt/score_approx.png" >}}
+{{< figure align=center src="/posts/learning-addition-with-gpt/score_exact.png" >}}
 
 ## Observations
 
 - The initial learning rate heavily influences convergence speed. I haven’t yet found a robust heuristic for scaling it with model size.
+- The model continues to learn even though the loss appears to plateau, as observed with the medium-sized model. This is somewhat surprising to me, as the exact prediction task should align with the training objective when using loss masking.
 - Using the approximative score for the learning rate scheduler was effective, as it’s smoother than the exact score. If the learning rate decreases too fast, the model gets stuck and stops learning.
 - Small models are highly sensitive to random seeds, sometimes learning quickly, sometimes failing entirely.
 
