@@ -72,6 +72,8 @@ params:
     Image: "images/blog.webp"
 
   socialIcons:
+    - name: email
+      url: "mailto:romflorentz@gmail.com" 
     - name: github
       url: "https://github.com/v4nn4"
     - name: linkedin
