@@ -7,6 +7,8 @@ tags: ["gpt", "pytorch", "outlines", "llm"]
 ShowToc: false
 ShowBreadCrumbs: false
 math: mathjax
+images:
+  - aliens.webp
 ---
 
 
