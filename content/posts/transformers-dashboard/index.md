@@ -8,14 +8,12 @@ ShowBreadCrumbs: false
 math: mathjax
 ---
 
-➡️ https://transformers-dashboard.vercel.app
-
 {{< figure align=center src="/posts/transformers-dashboard/dashboard.png" >}}
 
 
 Since the publication of the now famous 2017 paper [Attention is All You Need](https://arxiv.org/abs/1706.03762)[^1], many large language models based on the transformer architecture have emerged. Fortunately, some studies [^2] [^3] have compiled extensive data on many published models, including the dimensions of their transformers.
 
-Much like my experience learning about CNNs and their growth in complexity, I wanted to analyze LLM transformers. Which models are the largest? What is the optimal size for the feed-forward layer? Is it better to add more embeddings or more attention heads? Can we easily derive the total number of parameters from the network dimensions?
+Much like my experience learning about CNNs and their increasing complexity, I wanted to analyze LLM transformers. Which models are the largest? What is the optimal size for the feed-forward layer? Is it better to add more embeddings or more attention heads? Can we easily derive the total number of parameters from the network dimensions?
 
 ## Transformer model parameters
 
