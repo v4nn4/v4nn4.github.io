@@ -13,6 +13,7 @@ minify:
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
+  googleAnalytics: 
   title: Romain Florentz blog
   description: ""
   keywords: [Blog, Portfolio, PaperMod]
