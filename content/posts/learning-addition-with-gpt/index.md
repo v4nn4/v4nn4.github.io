@@ -1,7 +1,7 @@
 ---
 
 author: "v4nn4"
-title: "Learning Addition with GPT"
+title: "Learning addition with GPT"
 date: "2025-01-11"
 tags: ["gpt", "pytorch", "outlines", "llm"]
 ShowToc: false
