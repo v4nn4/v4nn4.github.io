@@ -5,7 +5,6 @@ date: "2025-01-25"
 tags: ["structured generation", "nlp", "ner", "llm", "outlines", "spacy", "openai"]
 ShowToc: false
 ShowBreadCrumbs: false
-math: mathjax
 images:
   - dune.png
 ---
@@ -80,12 +79,12 @@ We will use some of the labels defined in the [spaCy](https://github.com/explosi
 Let’s assume we have a function that produces this format for each chunk. Since an entity can appear multiple times with different labels depending on the context, we count the occurrences of each label, and the one with the highest probability is chosen.
 
 Now we discuss two NER methods:
-- Using a pre-trained model, here [spaCy](https://github.com/explosion/spaCy).
-- Using structured generation with [outlines](https://github.com/dottxt-ai/outlines) (e.g., OpenAI GPT-4o-mini).
+- Using a pre-trained model, here spaCy.
+- Using structured generation with outlines (e.g., OpenAI GPT-4o-mini).
 
 ## Using pre-trained models
 
-Before reinventing the wheel for fun, let's explore [spaCy](https://github.com/explosion/spaCy). SpaCy is a popular Python library offering pre trained models for various NLP tasks.
+Before reinventing the wheel for fun, let's explore spaCy. spaCy is a popular Python library offering pre trained models for various NLP tasks.
 
 Here’s how I extract entities from chunks using spaCy:
 
