@@ -6,7 +6,7 @@ tags: ["structured generation", "nlp", "ner", "llm", "outlines", "spacy", "opena
 ShowToc: false
 ShowBreadCrumbs: false
 images:
-  - dune.png
+  - dune_square.png
 ---
 
 ![Dune](dune.png)
