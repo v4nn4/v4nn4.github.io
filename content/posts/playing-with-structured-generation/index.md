@@ -248,7 +248,7 @@ Below, we show the results when NER is performed using spaCy (with `en_core_web_
 
 ### spaCy
 
-![ner-graph-openai](./ner_graph_spacy.svg)
+![ner-graph-spacy](./ner_graph_spacy.svg)
 
 - There is significant mislabeling in this dataset. As mentioned earlier, this might be due to the training data being focused on non-fiction content.
 - The `LOC` and `NORP` labels are largely ignored, with most entities being assigned to `PERSON`, `ORG` or `GPE`.
@@ -264,6 +264,8 @@ Below, we show the results when NER is performed using spaCy (with `en_core_web_
 
 Finally, we disregard NER altogether and compute a simple social graph by creating an edge whenever two entities appear in the same chunk. We then focus exclusively on characters and use their respective houses (Atreides, Fremen, Harkonnen, etc.) to color labels and edges in Gephi.
 
-![](./social_graph_openai.svg)
+![social-graph-openai](./social_graph_openai.svg)
+
+Code available here : https://github.com/v4nn4/dune-ner
 
 That’s all for today! 🌶️ 🪐
