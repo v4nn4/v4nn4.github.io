@@ -74,7 +74,9 @@ params:
 
   socialIcons:
     - name: email
-      url: "mailto:romflorentz@gmail.com"
+      url: "mailto:romain@florentz-consulting.com"
+    - name: rss
+      url: "/index.xml"
     - name: bluesky
       url: "https://bsky.app/profile/romflorentz.bsky.social"
     - name: github
