@@ -1,6 +1,6 @@
 ---
 author: "v4nn4"
-title: "Playing with structured generation"
+title: "Named Entity Recognition using structured generation"
 date: "2025-01-25"
 tags: ["structured generation", "nlp", "ner", "llm", "outlines", "spacy", "openai"]
 ShowToc: false
