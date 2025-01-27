@@ -7,6 +7,8 @@ ShowToc: false
 ShowBreadCrumbs: false
 images:
   - dune_square.png
+aliases:
+  - /posts/playing-with-structured-generation/
 ---
 
 ![Dune](dune.png)
